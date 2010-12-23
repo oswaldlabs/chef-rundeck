@@ -1,0 +1,60 @@
+#!/usr/bin/env ruby
+#
+# Copyright 2010, Opscode, Inc.
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+$:.unshift(File.expand_path(File.join(File.dirname(__FILE__), "..", "lib")))
+
+require 'rubygems'
+require 'chef-rundeck'
+require 'mixlib/cli'
+
+class ChefRundeckCLI
+  include Mixlib::CLI
+ 
+   option :config_file,
+      :short => "-c CONFIG",
+      :long  => "--config CONFIG",
+      :default => 'config.rb',
+      :description => "The Chef configuration file to use"
+
+   option :username,
+     :short => "-u USERNAME",
+     :long => "--username USERNAME",
+     :default => ENV['USER'],
+     :description => "The Username for Rundeck to SSH as"
+
+   option :web_ui_url,
+     :short => "-w WEB_UI_URL",
+     :long => "--web-ui-url WEB_UI_URL",
+     :description => "The base URL of the Chef Web UI"
+
+   option :port,
+     :short => "-p PORT",
+     :long => "--port PORT",
+     :description => "The port to run on, default 9980",
+     :default => 9980
+end
+
+cli = ChefRundeckCLI.new
+cli.parse_options
+
+ChefRundeck.config_file = cli.config[:config_file]
+ChefRundeck.username = cli.config[:username]
+ChefRundeck.web_ui_url = cli.config[:web_ui_url]
+ChefRundeck.configure
+
+ChefRundeck.run! :host => 'localhost', :port => cli.config[:port] 
+
