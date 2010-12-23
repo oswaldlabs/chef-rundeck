@@ -1,6 +1,8 @@
 = chef-rundeck
 
-Description goes here.
+Integrates Chef with RunDeck.
+
+Install the gem and fire up chef-rundeck - point it at a Chef Client configuration file (the one you use for knife would be ideal), and provide the URI for your Chef Server Web UI.
 
 == Note on Patches/Pull Requests
  
