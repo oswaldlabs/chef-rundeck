@@ -5,8 +5,8 @@ begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
     gem.name = "chef-rundeck"
-    gem.summary = %Q{Integrates Chef with Rundeck}
-    gem.description = %Q{Provides a resource endpoint for Rundeck from a Chef Server}
+    gem.summary = %Q{Integrates Chef with RunDeck}
+    gem.description = %Q{Provides a resource endpoint for RunDeck from a Chef Server}
     gem.email = "adam@opscode.com"
     gem.homepage = "http://github.com/opscode/chef-rundeck"
     gem.authors = ["Adam Jacob"]
