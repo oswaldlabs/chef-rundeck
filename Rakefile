@@ -10,6 +10,9 @@ begin
     gem.email = "adam@opscode.com"
     gem.homepage = "http://github.com/opscode/chef-rundeck"
     gem.authors = ["Adam Jacob"]
+    gem.add_dependency "sinatra"
+    gem.add_dependency "chef"
+    gem.add_dependency "mixlib-cli"
     gem.add_development_dependency "rspec", ">= 1.2.9"
     gem.add_development_dependency "yard", ">= 0"
     # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
