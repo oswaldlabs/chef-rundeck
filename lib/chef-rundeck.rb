@@ -35,6 +35,7 @@ class ChefRundeck < Sinatra::Base
   end
 
   get '/' do
+    content_type 'text/xml'
     response = '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE project PUBLIC "-//DTO Labs Inc.//DTD Resources Document 1.0//EN" "project.dtd"><project>'
     Chef::Node.list(true).each do |node_array|
       node = node_array[1]
