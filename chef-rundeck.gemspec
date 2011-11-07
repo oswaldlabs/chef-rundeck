@@ -5,6 +5,7 @@
 
 Gem::Specification.new do |s|
   s.name = "chef-rundeck"
+<<<<<<< HEAD
   s.version = "1.0.1"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
@@ -22,7 +23,7 @@ Gem::Specification.new do |s|
     "LICENSE",
     "NOTICE",
     "README.md",
-    "Rakefile",
+    "Rakefile", 
     "bin/chef-rundeck",
     "lib/chef-rundeck.rb",
     "spec/chef-rundeck_spec.rb",
