@@ -27,19 +27,26 @@ class ChefRundeckCLI
    option :config_file,
       :short => "-c CONFIG",
       :long  => "--config CONFIG",
-      :default => 'config.rb',
-      :description => "The Chef configuration file to use"
+      :default => '/etc/chef/client.rb',
+      :description => "The Chef configuration file to use, default /etc/chef/client.rb"
 
    option :username,
      :short => "-u USERNAME",
      :long => "--username USERNAME",
      :default => ENV['USER'],
-     :description => "The Username for Rundeck to SSH as"
+     :description => "The default username for rundeck to SSH as"
 
    option :web_ui_url,
      :short => "-w WEB_UI_URL",
      :long => "--web-ui-url WEB_UI_URL",
-     :description => "The base URL of the Chef Web UI"
+     :description => "The base URL of the Chef Web UI, default http://localhost:4040",
+     :default => "http://localhost:4040"
+   
+   option :project_config,
+     :short => "-f PROJECT_CONFIG",
+     :long => "--project-config PROJECT_CONFIG",
+     :description => "JSON project configuration file, default /etc/chef/rundeck.json",
+     :default => "/etc/chef/rundeck.json"
 
    option :port,
      :short => "-p PORT",
@@ -54,6 +61,7 @@ cli.parse_options
 ChefRundeck.config_file = cli.config[:config_file]
 ChefRundeck.username = cli.config[:username]
 ChefRundeck.web_ui_url = cli.config[:web_ui_url]
+ChefRundeck.project_config = cli.config[:project_config]
 ChefRundeck.configure
 
 ChefRundeck.run! :host => 'localhost', :port => cli.config[:port] 

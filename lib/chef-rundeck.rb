@@ -14,7 +14,8 @@
 # limitations under the License.
 #
 
-require 'sinatra/base'
+require 'sinatra'
+require 'json'
 require 'chef'
 require 'chef/node'
 require 'chef/mixin/xml_escape'
@@ -27,17 +28,47 @@ class ChefRundeck < Sinatra::Base
     attr_accessor :config_file
     attr_accessor :username
     attr_accessor :web_ui_url
+    attr_accessor :project_config
 
     def configure
       Chef::Config.from_file(ChefRundeck.config_file)
       Chef::Log.level = Chef::Config[:log_level]
+
+      before do
+        response.headers["Content-Type"] = "text/xml"
+      end
+
+      if (File.exists?(ChefRundeck.project_config)) then
+	puts "Using JSON project file #{ChefRundeck.project_config}"
+	projects = File.open(ChefRundeck.project_config, "r") { |f|
+	  JSON.parse(f.read)
+	}
+	projects.keys.each do | project |
+	  get "/#{project}" do
+	    puts "Loading nodes for /#{project}"
+	    response = build_project projects[project]['pattern'], projects[project]['username'], (projects[project]['hostname'].nil? ? "fqdn" : projects[project]['hostname'])
+	    response
+	  end
+	end
+      else
+	get '/' do
+	  puts "Loading all nodes for /"
+	  response = build_project
+	  response
+	end
+      end
     end
   end
 
-  get '/' do
-    response = '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE project PUBLIC "-//DTO Labs Inc.//DTD Resources Document 1.0//EN" "project.dtd"><project>'
-    Chef::Node.list(true).each do |node_array|
-      node = node_array[1]
+
+  def build_project (pattern="*:*", username=ChefRundeck.username, hostname="fqdn")
+    response =  '<?xml version="1.0" encoding="UTF-8"?>'
+    response << '<!DOCTYPE project PUBLIC "-//DTO Labs Inc.//DTD Resources Document 1.0//EN" "project.dtd">'
+    response << '<project>'
+
+    q = Chef::Search::Query.new
+    q.search("node",pattern) do |node|
+      begin
       response << <<-EOH
 <node name="#{xml_escape(node[:fqdn])}" 
       type="Node" 
@@ -47,13 +78,16 @@ class ChefRundeck < Sinatra::Base
       osName="#{xml_escape(node[:platform])}"
       osVersion="#{xml_escape(node[:platform_version])}"
       tags="#{xml_escape(node.run_list.roles.join(','))}"
-      username="#{xml_escape(ChefRundeck.username)}"
-      hostname="#{xml_escape(node[:fqdn])}"
+      username="#{xml_escape(username)}"
+      hostname="#{xml_escape(node[hostname])}"
       editUrl="#{xml_escape(ChefRundeck.web_ui_url)}/nodes/#{xml_escape(node.name)}/edit"/>
 EOH
+      rescue Exception => e
+        puts "Error generating node #{node.name}:\n---\n#{e.message}\n#{e.backtrace.inspect}"
+      end
     end
     response << "</project>"
-    response
+    return response
   end
 end
 
