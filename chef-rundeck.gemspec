@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "chef-rundeck"
-  s.version = "0.1.0"
+  s.version = "0.2.1"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Adam Jacob"]
-  s.date = "2011-11-07"
+  s.date = "2012-06-07"
   s.description = "Provides a resource endpoint for RunDeck from a Chef Server"
   s.email = "adam@opscode.com"
   s.executables = ["chef-rundeck"]
@@ -25,6 +25,7 @@ Gem::Specification.new do |s|
     "Rakefile",
     "VERSION",
     "bin/chef-rundeck",
+    "chef-rundeck.gemspec",
     "lib/chef-rundeck.rb",
     "spec/chef-rundeck_spec.rb",
     "spec/spec.opts",
@@ -32,7 +33,7 @@ Gem::Specification.new do |s|
   ]
   s.homepage = "http://github.com/opscode/chef-rundeck"
   s.require_paths = ["lib"]
-  s.rubygems_version = "1.8.10"
+  s.rubygems_version = "1.8.15"
   s.summary = "Integrates Chef with RunDeck"
 
   if s.respond_to? :specification_version then
