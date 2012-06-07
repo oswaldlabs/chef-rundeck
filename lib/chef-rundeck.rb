@@ -22,6 +22,10 @@ require 'chef/mixin/xml_escape'
 
 class ChefRundeck < Sinatra::Base
 
+  before do
+    content_type 'text/xml'
+  end
+
   include Chef::Mixin::XMLEscape
 
   class << self
@@ -34,7 +38,6 @@ class ChefRundeck < Sinatra::Base
       Chef::Config.from_file(ChefRundeck.config_file)
       Chef::Log.level = Chef::Config[:log_level]
 
-      content_type 'text/xml'
 
       if (File.exists?(ChefRundeck.project_config)) then
 	puts "Using JSON project file #{ChefRundeck.project_config}"
