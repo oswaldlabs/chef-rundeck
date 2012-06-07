@@ -34,9 +34,7 @@ class ChefRundeck < Sinatra::Base
       Chef::Config.from_file(ChefRundeck.config_file)
       Chef::Log.level = Chef::Config[:log_level]
 
-      before do
-        response.headers["Content-Type"] = "text/xml"
-      end
+      content_type 'text/xml'
 
       if (File.exists?(ChefRundeck.project_config)) then
 	puts "Using JSON project file #{ChefRundeck.project_config}"
