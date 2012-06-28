@@ -19,6 +19,15 @@ require 'chef'
 require 'chef/node'
 require 'chef/mixin/xml_escape'
 
+REQUIRED_ATTRS = [ :kernel, :fqdn, :platform, :platform_version ]
+
+class MissingAttribute < StandardError
+  attr_reader :name
+  def initialize(name)
+    @name = name
+  end
+end
+
 class ChefRundeck < Sinatra::Base
 
   include Chef::Mixin::XMLEscape
@@ -39,6 +48,17 @@ class ChefRundeck < Sinatra::Base
     response = '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE project PUBLIC "-//DTO Labs Inc.//DTD Resources Document 1.0//EN" "project.dtd"><project>'
     Chef::Node.list(true).each do |node_array|
       node = node_array[1]
+
+      begin
+        REQUIRED_ATTRS.each do | attr |
+          raise MissingAttribute.new(attr) if not node.attribute?(attr)
+        end
+      rescue MissingAttribute => e
+        Chef::Log.error("Node #{node.name} is missing required " \
+                        "attribute: #{e.name}")
+        next
+      end
+
       #--
       # Certain features in Rundeck require the osFamily value to be set to 'unix' to work appropriately. - SRK
       #++
