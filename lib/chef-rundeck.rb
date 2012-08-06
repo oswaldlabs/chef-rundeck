@@ -44,7 +44,7 @@ class ChefRundeck < Sinatra::Base
       #++
       os_family = node[:kernel][:os] =~ /windows/i ? 'windows' : 'unix'
       response << <<-EOH
-<node name="#{xml_escape(node[:fqdn])}" 
+<node name="#{xml_escape(node.name)}" 
       type="Node" 
       description="#{xml_escape(node.name)}"
       osArch="#{xml_escape(node[:kernel][:machine])}"
