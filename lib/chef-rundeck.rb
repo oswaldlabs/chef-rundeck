@@ -40,50 +40,73 @@ class ChefRundeck < Sinatra::Base
     response = '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE project PUBLIC "-//DTO Labs Inc.//DTD Resources Document 1.0//EN" "project.dtd"><project>'
     Chef::Node.list(true).each do |node_array|
       node = node_array[1]
-      
       begin
-
-        #--
-        # Newly created nodes and nodes reloaded with knife will not have these values set. 
-        # Loading them with 'unknown' and the node name as the FQDN gives us a chance at
-        # using rundeck with the machine until ohai gets a chance to populate these values.  
-        #++
-        if node[:kernel]
-          #--
-          # Certain features in Rundeck require the osFamily value to be set to 'unix' to work appropriately. - SRK
-          #++
-          os_family = node[:kernel][:os] =~ /windows/i ? 'windows' : 'unix'
-          machine = node[:kernel][:machine]
-        else 
-          os_family = 'unknown'
-          machine = 'unknown'
-        end
-        
-        platform = node[:platform] ? node[:platform] : platform = 'unknown'
-        platform_version = node[:platform_version] ? node[:platform_version] : 'unknown' 
-        fqdn = node[:fqdn] ? node[:fqdn] : node.name #Next best thing, 
-        
-        response << <<-EOH
-  <node name="#{xml_escape(node.name)}" 
-        type="Node" 
-        description="#{xml_escape(node.name)}"
-        osArch="#{xml_escape(machine)}"
-        osFamily="#{xml_escape(os_family)}"
-        osName="#{xml_escape(platform)}"
-        osVersion="#{xml_escape(platform_version)}"
-        tags="#{xml_escape([node.chef_environment, node.run_list.roles.join(',')].join(','))}"
-        username="#{xml_escape(ChefRundeck.username)}"
-        hostname="#{xml_escape(fqdn)}"
-        editUrl="#{xml_escape(ChefRundeck.web_ui_url)}/nodes/#{xml_escape(node.name)}/edit"/>
-EOH
-      
-      rescue Exception => e
-        Chef::Log.error("Error processing node: #{node.name}, skipping. #{e.name}")
+        response << node_xml(node)
+      rescue => e
+        Chef::Log.error("Error processing node: #{node.name}, skipping. #{e}")
         next
       end
     end
     response << "</project>"
-    response
+  end
+
+  get '/:environment' do
+    content_type 'text/xml'
+    response = '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE project PUBLIC "-//DTO Labs Inc.//DTD Resources Document 1.0//EN" "project.dtd"><project>'
+    Chef::Node.list_by_environment(params[:environment], true).each do |node_array|
+      node = node_array[1]
+      begin
+        response << node_xml(node)
+      rescue => e
+        Chef::Log.error("Error processing node: #{node.name}, skipping. #{e}")
+        next
+      end
+    end
+    response << "</project>"
+  end
+
+  private
+  def node_xml(node)
+    #--
+    # Newly created nodes and nodes reloaded with knife will not have these values set. 
+    # Loading them with 'unknown' and the node name as the FQDN gives us a chance at
+    # using rundeck with the machine until ohai gets a chance to populate these values.  
+    #++
+    if node[:kernel]
+      #--
+      # Certain features in Rundeck require the osFamily value to be set to 'unix' to work appropriately. - SRK
+      #++
+      os_family = node[:kernel][:os] =~ /windows/i ? 'windows' : 'unix'
+      machine = node[:kernel][:machine]
+    else 
+      os_family = 'unknown'
+      machine = 'unknown'
+    end
+    
+    platform = node[:platform] ? node[:platform] : platform = 'unknown'
+    platform_version = node[:platform_version] ? node[:platform_version] : 'unknown' 
+    fqdn = node[:fqdn] ? node[:fqdn] : node.name #Next best thing, 
+    
+    # Allow overriding the username on a per-node basis.
+    username = ChefRundeck.username
+    if node[:rundeck] && node[:rundeck].has_key?('username')
+      username = node[:rundeck][:username]
+    end
+    
+    return <<-EOH
+<node name="#{xml_escape(node.name)}" 
+      type="Node" 
+      description="#{xml_escape(node.name)}"
+      osArch="#{xml_escape(machine)}"
+      osFamily="#{xml_escape(os_family)}"
+      osName="#{xml_escape(platform)}"
+      osVersion="#{xml_escape(platform_version)}"
+      tags="#{xml_escape([node.chef_environment, node.run_list.roles.join(',')].join(','))}"
+      username="#{xml_escape(username)}"
+      hostname="#{xml_escape(fqdn)}"
+      editUrl="#{xml_escape(ChefRundeck.web_ui_url)}/nodes/#{xml_escape(node.name)}/edit"/>
+EOH
+      
   end
 end
 
