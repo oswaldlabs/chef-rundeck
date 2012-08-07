@@ -76,9 +76,10 @@ class ChefRundeck < Sinatra::Base
         hostname="#{xml_escape(fqdn)}"
         editUrl="#{xml_escape(ChefRundeck.web_ui_url)}/nodes/#{xml_escape(node.name)}/edit"/>
 EOH
+      
+      rescue
+        next
       end
-    rescue
-      next
     end
     response << "</project>"
     response
