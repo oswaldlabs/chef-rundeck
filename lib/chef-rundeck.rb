@@ -59,9 +59,13 @@ class ChefRundeck < Sinatra::Base
           machine = 'unknown'
         end
         
+        raise MissingAttribute.new("attr")
+        
         platform = node[:platform] ? node[:platform] : platform = 'unknown'
         platform_version = node[:platform_version] ? node[:platform_version] : 'unknown' 
         fqdn = node[:fqdn] ? node[:fqdn] : node.name #Next best thing, 
+        
+        
         
         response << <<-EOH
   <node name="#{xml_escape(node.name)}" 
@@ -77,7 +81,8 @@ class ChefRundeck < Sinatra::Base
         editUrl="#{xml_escape(ChefRundeck.web_ui_url)}/nodes/#{xml_escape(node.name)}/edit"/>
 EOH
       
-      rescue
+      rescue Exception => e
+        Chef::Log.error("Error processing node: #{node.name}, skipping. #{e.name}")
         next
       end
     end
