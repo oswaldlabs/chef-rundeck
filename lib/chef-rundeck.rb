@@ -24,7 +24,7 @@ class ChefRundeck < Sinatra::Base
   include Chef::Mixin::XMLEscape
 
   class << self
-    puts "Hello"
+
     attr_accessor :config_file
     attr_accessor :username
     attr_accessor :web_ui_url
@@ -43,7 +43,9 @@ class ChefRundeck < Sinatra::Base
       
 
       #--
-      # Newly created nodes and node reloaded with knife will not have these values set.   
+      # Newly created nodes and nodes reloaded with knife will not have these values set. 
+      # Loading them with 'unknown' and the node name as the FQDN gives us a chance at
+      # using rundeck with the machine until ohai gets a chance to populate these values.  
       #++
       if node[:kernel]
         #--
