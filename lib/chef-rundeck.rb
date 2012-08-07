@@ -59,13 +59,9 @@ class ChefRundeck < Sinatra::Base
           machine = 'unknown'
         end
         
-        raise MissingAttribute.new("attr")
-        
         platform = node[:platform] ? node[:platform] : platform = 'unknown'
         platform_version = node[:platform_version] ? node[:platform_version] : 'unknown' 
         fqdn = node[:fqdn] ? node[:fqdn] : node.name #Next best thing, 
-        
-        
         
         response << <<-EOH
   <node name="#{xml_escape(node.name)}" 
