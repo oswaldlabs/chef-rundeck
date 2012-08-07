@@ -41,40 +41,44 @@ class ChefRundeck < Sinatra::Base
     Chef::Node.list(true).each do |node_array|
       node = node_array[1]
       
+      begin
 
-      #--
-      # Newly created nodes and nodes reloaded with knife will not have these values set. 
-      # Loading them with 'unknown' and the node name as the FQDN gives us a chance at
-      # using rundeck with the machine until ohai gets a chance to populate these values.  
-      #++
-      if node[:kernel]
         #--
-        # Certain features in Rundeck require the osFamily value to be set to 'unix' to work appropriately. - SRK
+        # Newly created nodes and nodes reloaded with knife will not have these values set. 
+        # Loading them with 'unknown' and the node name as the FQDN gives us a chance at
+        # using rundeck with the machine until ohai gets a chance to populate these values.  
         #++
-        os_family = node[:kernel][:os] =~ /windows/i ? 'windows' : 'unix'
-        machine = node[:kernel][:machine]
-      else 
-        os_family = 'unknown'
-        machine = 'unknown'
-      end
-      
-      platform = node[:platform] ? node[:platform] : platform = 'unknown'
-      platform_version = node[:platform_version] ? node[:platform_version] : 'unknown' 
-      fqdn = node[:fqdn] ? node[:fqdn] : node.name #Next best thing, 
-      
-      response << <<-EOH
-<node name="#{xml_escape(node.name)}" 
-      type="Node" 
-      description="#{xml_escape(node.name)}"
-      osArch="#{xml_escape(machine)}"
-      osFamily="#{xml_escape(os_family)}"
-      osName="#{xml_escape(platform)}"
-      osVersion="#{xml_escape(platform_version)}"
-      tags="#{xml_escape([node.chef_environment, node.run_list.roles.join(',')].join(','))}"
-      username="#{xml_escape(ChefRundeck.username)}"
-      hostname="#{xml_escape(fqdn)}"
-      editUrl="#{xml_escape(ChefRundeck.web_ui_url)}/nodes/#{xml_escape(node.name)}/edit"/>
+        if node[:kernel]
+          #--
+          # Certain features in Rundeck require the osFamily value to be set to 'unix' to work appropriately. - SRK
+          #++
+          os_family = node[:kernel][:os] =~ /windows/i ? 'windows' : 'unix'
+          machine = node[:kernel][:machine]
+        else 
+          os_family = 'unknown'
+          machine = 'unknown'
+        end
+        
+        platform = node[:platform] ? node[:platform] : platform = 'unknown'
+        platform_version = node[:platform_version] ? node[:platform_version] : 'unknown' 
+        fqdn = node[:fqdn] ? node[:fqdn] : node.name #Next best thing, 
+        
+        response << <<-EOH
+  <node name="#{xml_escape(node.name)}" 
+        type="Node" 
+        description="#{xml_escape(node.name)}"
+        osArch="#{xml_escape(machine)}"
+        osFamily="#{xml_escape(os_family)}"
+        osName="#{xml_escape(platform)}"
+        osVersion="#{xml_escape(platform_version)}"
+        tags="#{xml_escape([node.chef_environment, node.run_list.roles.join(',')].join(','))}"
+        username="#{xml_escape(ChefRundeck.username)}"
+        hostname="#{xml_escape(fqdn)}"
+        editUrl="#{xml_escape(ChefRundeck.web_ui_url)}/nodes/#{xml_escape(node.name)}/edit"/>
 EOH
+      end
+    rescue
+      next
     end
     response << "</project>"
     response
