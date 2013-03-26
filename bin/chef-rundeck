@@ -46,6 +46,13 @@ class ChefRundeckCLI
      :long => "--port PORT",
      :description => "The port to run on, default 9980",
      :default => 9980
+
+   option :env_node_only,
+     :short => "-e",
+     :long => "--env-node-only",
+     :description => "Get nodes and their envs only",
+     :boolean => true
+
 end
 
 cli = ChefRundeckCLI.new
@@ -54,6 +61,7 @@ cli.parse_options
 ChefRundeck.config_file = cli.config[:config_file]
 ChefRundeck.username = cli.config[:username]
 ChefRundeck.web_ui_url = cli.config[:web_ui_url]
+ChefRundeck.env_node_only = cli.config[:env_node_only]
 ChefRundeck.configure
 
 ChefRundeck.run! :host => 'localhost', :port => cli.config[:port] 
