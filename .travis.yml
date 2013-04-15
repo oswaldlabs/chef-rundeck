@@ -1,0 +1,10 @@
+language: ruby
+bundler_args: --without development
+
+env:
+  - CI=true
+rvm:
+  - 1.9.2
+  - 1.9.3
+gemfile:
+  - Gemfile
