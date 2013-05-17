@@ -13,6 +13,7 @@ require 'rack/test'
 
   def app
     ChefRundeck.new
+    ChefRundeck.configure("#{ENV['TRAVIS_BUILD_DIR']}/spec/support/client.rb")
   end
 
 RSpec.configure do |config|
