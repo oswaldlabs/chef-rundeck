@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
   s.version = "0.1.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["Adam Jacob"]
+  s.authors = ["Adam Jacob", "Brian Scott", "Steven Wagner"]
   s.date = "2011-11-07"
   s.description = "Provides a resource endpoint for RunDeck from a Chef Server"
   s.email = "adam@opscode.com"
