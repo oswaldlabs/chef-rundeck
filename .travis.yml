@@ -9,4 +9,4 @@ rvm:
 gemfile:
   - Gemfile
 before_script: 
-  - ./spec/support/setup-test.sh
+  - sudo ./spec/support/setup-test.sh
