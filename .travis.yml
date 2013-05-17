@@ -8,3 +8,5 @@ rvm:
   - 1.9.3
 gemfile:
   - Gemfile
+after_install: 
+  - ./spec/support/setup-test.sh
