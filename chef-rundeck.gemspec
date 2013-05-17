@@ -11,17 +11,17 @@ Gem::Specification.new do |s|
   s.authors = ["Adam Jacob", "Brian Scott", "Steven Wagner"]
   s.date = "2011-11-07"
   s.description = "Provides a resource endpoint for RunDeck from a Chef Server"
-  s.email = "adam@opscode.com"
+  s.email = "brainscott@gmail.com"
   s.executables = ["chef-rundeck"]
   s.extra_rdoc_files = [
     "LICENSE",
-    "README.rdoc"
+    "README.md"
   ]
   s.files = [
     ".document",
     "LICENSE",
     "NOTICE",
-    "README.rdoc",
+    "README.md",
     "Rakefile",
     "VERSION",
     "bin/chef-rundeck",
