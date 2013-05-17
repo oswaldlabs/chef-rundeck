@@ -44,12 +44,14 @@ Gem::Specification.new do |s|
       s.add_runtime_dependency(%q<mixlib-cli>, [">= 0"])
       s.add_development_dependency(%q<rspec>, [">= 1.2.9"])
       s.add_development_dependency(%q<yard>, [">= 0"])
+      s.add_development_dependency(%q<rack-test>, [">= 0"])
     else
       s.add_dependency(%q<sinatra>, [">= 0"])
       s.add_dependency(%q<chef>, [">= 0"])
       s.add_dependency(%q<mixlib-cli>, [">= 0"])
       s.add_dependency(%q<rspec>, [">= 1.2.9"])
       s.add_dependency(%q<yard>, [">= 0"])
+      s.add_development_dependency(%q<rack-test>, [">= 0"])
     end
   else
     s.add_dependency(%q<sinatra>, [">= 0"])
@@ -57,6 +59,7 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<mixlib-cli>, [">= 0"])
     s.add_dependency(%q<rspec>, [">= 1.2.9"])
     s.add_dependency(%q<yard>, [">= 0"])
+    s.add_dependency(%q<rack-test>, [">= 0"])
   end
 end
 
