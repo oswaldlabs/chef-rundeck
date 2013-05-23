@@ -18,6 +18,7 @@ require 'sinatra/base'
 require 'chef'
 require 'chef/node'
 require 'chef/mixin/xml_escape'
+require 'chef/rest'
 
 class ChefRundeck < Sinatra::Base
 
@@ -37,8 +38,12 @@ class ChefRundeck < Sinatra::Base
   get '/' do
     content_type 'text/xml'
     response = '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE project PUBLIC "-//DTO Labs Inc.//DTD Resources Document 1.0//EN" "project.dtd"><project>'
-    Chef::Node.list(true).each do |node_array|
-      node = node_array[1]
+    rest = Chef::REST.new(Chef::Config[:chef_server_url], Chef::Config[:node_name], Chef::Config[:client_key] )
+    nodes = rest.get_rest("/nodes/")
+    
+    nodes.keys.each do |node_name|
+      node = rest.get_rest("/nodes/#{node_name}")
+      puts node_name
       #--
       # Certain features in Rundeck require the osFamily value to be set to 'unix' to work appropriately. - SRK
       #++
@@ -46,15 +51,15 @@ class ChefRundeck < Sinatra::Base
       response << <<-EOH
 <node name="#{xml_escape(node[:fqdn])}" 
       type="Node" 
-      description="#{xml_escape(node.name)}"
+      description="#{xml_escape(node_name)}"
       osArch="#{xml_escape(node[:kernel][:machine])}"
       osFamily="#{xml_escape(os_family)}"
       osName="#{xml_escape(node[:platform])}"
       osVersion="#{xml_escape(node[:platform_version])}"
       tags="#{xml_escape([node.chef_environment, node.run_list.roles.join(',')].join(','))}"
-      username="#{xml_escape(ChefRundeck.username)}"
+      username="#{xml_escape(Chef::Config[:node_name])}"
       hostname="#{xml_escape(node[:fqdn])}"
-      editUrl="#{xml_escape(ChefRundeck.web_ui_url)}/nodes/#{xml_escape(node.name)}/edit"/>
+      editUrl="#{xml_escape(Chef::Config[:chef_server_url])}/nodes/#{xml_escape(node_name)}/edit"/>
 EOH
     end
     response << "</project>"
