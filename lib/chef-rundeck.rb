@@ -43,7 +43,6 @@ class ChefRundeck < Sinatra::Base
     
     nodes.keys.each do |node_name|
       node = rest.get_rest("/nodes/#{node_name}")
-      puts node_name
       #--
       # Certain features in Rundeck require the osFamily value to be set to 'unix' to work appropriately. - SRK
       #++
