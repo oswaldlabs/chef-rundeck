@@ -33,8 +33,9 @@ class ChefRundeck < Sinatra::Base
     def configure
       Chef::Config.from_file(ChefRundeck.config_file)
       Chef::Log.level = Chef::Config[:log_level]
-      unless api_url 
-        ChefRundeck.api_url = Chef::Config[:chef_server_url] 
+
+      unless ChefRundeck.api_url
+        ChefRundeck.api_url = Chef::Config[:chef_server_url]
       end
     end
   end
