@@ -27,18 +27,22 @@ class ChefRundeck < Sinatra::Base
   class << self
     attr_accessor :config_file
     attr_accessor :username
-    attr_accessor :web_ui_url
+    attr_accessor :api_url
+    attr_accessor :client_key
 
     def configure
       Chef::Config.from_file(ChefRundeck.config_file)
       Chef::Log.level = Chef::Config[:log_level]
+      unless api_url 
+        ChefRundeck.api_url = Chef::Config[:chef_server_url] 
+      end
     end
   end
 
   get '/' do
     content_type 'text/xml'
     response = '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE project PUBLIC "-//DTO Labs Inc.//DTD Resources Document 1.0//EN" "project.dtd"><project>'
-    rest = Chef::REST.new(Chef::Config[:chef_server_url], Chef::Config[:node_name], Chef::Config[:client_key] )
+    rest = Chef::REST.new(ChefRundeck.api_url, ChefRundeck.username, ChefRundeck.client_key)
     nodes = rest.get_rest("/nodes/")
     
     nodes.keys.each do |node_name|
@@ -56,9 +60,9 @@ class ChefRundeck < Sinatra::Base
       osName="#{xml_escape(node[:platform])}"
       osVersion="#{xml_escape(node[:platform_version])}"
       tags="#{xml_escape([node.chef_environment, node.run_list.roles.join(',')].join(','))}"
-      username="#{xml_escape(Chef::Config[:node_name])}"
+      username="#{xml_escape(ChefRundeck.username)}"
       hostname="#{xml_escape(node[:fqdn])}"
-      editUrl="#{xml_escape(Chef::Config[:chef_server_url])}/nodes/#{xml_escape(node_name)}/edit"/>
+      editUrl="#{xml_escape(ChefRundeck.api_url)}/nodes/#{xml_escape(node_name)}/edit"/>
 EOH
     end
     response << "</project>"
