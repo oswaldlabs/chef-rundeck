@@ -37,6 +37,11 @@ class ChefRundeck < Sinatra::Base
       unless ChefRundeck.api_url
         ChefRundeck.api_url = Chef::Config[:chef_server_url]
       end
+
+      unless ChefRundeck.client_key
+        ChefRundeck.client_key = Chef::Config[:client_key]
+      end
+
     end
   end
 
@@ -44,9 +49,11 @@ class ChefRundeck < Sinatra::Base
     content_type 'text/xml'
     response = '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE project PUBLIC "-//DTO Labs Inc.//DTD Resources Document 1.0//EN" "project.dtd"><project>'
     rest = Chef::REST.new(ChefRundeck.api_url, ChefRundeck.username, ChefRundeck.client_key)
+    
     nodes = rest.get_rest("/nodes/")
     
     nodes.keys.each do |node_name|
+    
       node = rest.get_rest("/nodes/#{node_name}")
       #--
       # Certain features in Rundeck require the osFamily value to be set to 'unix' to work appropriately. - SRK

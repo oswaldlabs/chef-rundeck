@@ -50,8 +50,7 @@ class ChefRundeckCLI
    option :client_key,
      :short => "-k KEYFILE",
      :long => "--key-file KEYFILE",
-     :description => "The client.pem to sign requests",
-     :default => ENV['HOME'] + "/.chef/" + ENV['USER'] + ".pem"
+     :description => "The client.pem to sign requests"
 end
 
 cli = ChefRundeckCLI.new
