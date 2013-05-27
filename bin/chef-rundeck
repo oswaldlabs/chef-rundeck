@@ -36,16 +36,21 @@ class ChefRundeckCLI
      :default => ENV['USER'],
      :description => "The Username for Rundeck to SSH as"
 
-   option :web_ui_url,
-     :short => "-w WEB_UI_URL",
-     :long => "--web-ui-url WEB_UI_URL",
-     :description => "The base URL of the Chef Web UI"
+   option :api_url,
+     :short => "-a API_URL",
+     :long => "--api-url API_URL",
+     :description => "The base URL of the Chef REST API"
 
    option :port,
      :short => "-p PORT",
      :long => "--port PORT",
      :description => "The port to run on, default 9980",
      :default => 9980
+
+   option :client_key,
+     :short => "-k KEYFILE",
+     :long => "--key-file KEYFILE",
+     :description => "The client.pem to sign requests"
 end
 
 cli = ChefRundeckCLI.new
@@ -53,7 +58,8 @@ cli.parse_options
 
 ChefRundeck.config_file = cli.config[:config_file]
 ChefRundeck.username = cli.config[:username]
-ChefRundeck.web_ui_url = cli.config[:web_ui_url]
+ChefRundeck.api_url = cli.config[:api_url]
+ChefRundeck.client_key = cli.config[:client_key]
 ChefRundeck.configure
 
 ChefRundeck.run! :host => 'localhost', :port => cli.config[:port] 
