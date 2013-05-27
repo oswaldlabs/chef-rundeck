@@ -48,6 +48,7 @@ class ChefRundeck < Sinatra::Base
   get '/' do
     content_type 'text/xml'
     response = '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE project PUBLIC "-//DTO Labs Inc.//DTD Resources Document 1.0//EN" "project.dtd"><project>'
+
     rest = Chef::REST.new(ChefRundeck.api_url, ChefRundeck.username, ChefRundeck.client_key)
     
     nodes = rest.get_rest("/nodes/")
