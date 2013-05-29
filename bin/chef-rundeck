@@ -39,7 +39,8 @@ class ChefRundeckCLI
    option :web_ui_url,
      :short => "-w WEB_UI_URL",
      :long => "--web-ui-url WEB_UI_URL",
-     :description => "The base URL of the Chef Web UI"
+     :description => "The base URL of the Chef Web UI",
+     :default => "https://manage.opscode.com"
 
    option :port,
      :short => "-p PORT",
