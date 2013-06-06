@@ -47,6 +47,12 @@ class ChefRundeckCLI
      :long => "--port PORT",
      :description => "The port to run on, default 9980",
      :default => 9980
+
+   option :pidfile,
+     :short => "-P FILE",
+     :long => "--pidfile FILE",
+     :description => "Prefix for our PID file, default: /var/run/chef-rundeck- ('PORT.pid' will be added)",
+     :default => "/var/run/chef-rundeck"
 end
 
 cli = ChefRundeckCLI.new
@@ -56,6 +62,15 @@ ChefRundeck.config_file = cli.config[:config_file]
 ChefRundeck.username = cli.config[:username]
 ChefRundeck.web_ui_url = cli.config[:web_ui_url]
 ChefRundeck.configure
+
+begin
+   pid = "#{cli.config[:pidfile]}-#{cli.config[:port]}.pid"
+   puts "Writing to #{pid}"
+   File.open(pid, 'w'){ |f| f.write(Process.pid) }
+   at_exit { File.delete(pid) if File.exist?(pid) }
+rescue Exception => e
+   puts "== Error writing pid file #{pid}!"
+end
 
 ChefRundeck.run! :host => 'localhost', :port => cli.config[:port] 
 
