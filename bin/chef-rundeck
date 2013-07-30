@@ -70,5 +70,5 @@ ChefRundeck.web_ui_url = cli.config[:web_ui_url]
 ChefRundeck.project_config = cli.config[:project_config]
 ChefRundeck.configure
 
-ChefRundeck.run! :host => cli.config[:bind], :port => cli.config[:port] 
+ChefRundeck.run! :bind => cli.config[:bind], :port => cli.config[:port] 
 
