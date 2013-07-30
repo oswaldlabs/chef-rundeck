@@ -53,6 +53,12 @@ class ChefRundeckCLI
      :long => "--port PORT",
      :description => "The port to run on, default 9980",
      :default => 9980
+
+   option :bind,
+     :short => "-b ADDRESS",
+     :long => "--bind ADDRESS",
+     :description => "The address to run on, default 0.0.0.0",
+     :default => "0.0.0.0"
 end
 
 cli = ChefRundeckCLI.new
@@ -64,5 +70,5 @@ ChefRundeck.web_ui_url = cli.config[:web_ui_url]
 ChefRundeck.project_config = cli.config[:project_config]
 ChefRundeck.configure
 
-ChefRundeck.run! :host => 'localhost', :port => cli.config[:port] 
+ChefRundeck.run! :host => cli.config[:bind], :port => cli.config[:port] 
 
