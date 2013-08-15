@@ -30,6 +30,9 @@ class ChefRundeck < Sinatra::Base
 
     def configure
       Chef::Config.from_file(ChefRundeck.config_file)
+      client = Chef::Client.new
+      client.run_ohai
+      client.register
       Chef::Log.level = Chef::Config[:log_level]
     end
   end
