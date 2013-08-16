@@ -9,7 +9,7 @@ PATH
 GEM
   remote: http://rubygems.org/
   specs:
-    chef (11.4.4)
+    chef (11.6.0)
       erubis
       highline (>= 1.6.9)
       json (>= 1.4.4, <= 1.7.7)
