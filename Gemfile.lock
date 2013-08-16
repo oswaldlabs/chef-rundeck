@@ -47,6 +47,7 @@ GEM
     net-ssh-multi (1.1)
       net-ssh (>= 2.1.4)
       net-ssh-gateway (>= 0.99.0)
+    nokogiri (1.5.10)
     ohai (6.16.0)
       ipaddress
       mixlib-cli
@@ -88,6 +89,7 @@ PLATFORMS
 DEPENDENCIES
   chef-rundeck!
   jeweler
+  nokogiri
   rack-test
   rspec (>= 1.2.9)
   yard
