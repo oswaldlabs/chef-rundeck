@@ -23,12 +23,22 @@ require 'mixlib/cli'
 
 class ChefRundeckCLI
   include Mixlib::CLI
+
+   option :api_url,
+     :short => "-a API_URL",
+     :long => "--api-url API_URL",
+     :description => "The base URL of the Chef REST API"
+
+   option :client_key,
+     :short => "-k KEYFILE",
+     :long => "--key-file KEYFILE",
+     :description => "The client.pem to sign requests"
  
    option :config_file,
-      :short => "-c CONFIG",
-      :long  => "--config CONFIG",
-      :default => 'config.rb',
-      :description => "The Chef configuration file to use"
+     :short => "-c CONFIG",
+     :long  => "--config CONFIG",
+     :default => 'config.rb',
+     :description => "The Chef configuration file to use"
 
    option :username,
      :short => "-u USERNAME",
@@ -61,6 +71,8 @@ cli.parse_options
 ChefRundeck.config_file = cli.config[:config_file]
 ChefRundeck.username = cli.config[:username]
 ChefRundeck.web_ui_url = cli.config[:web_ui_url]
+ChefRundeck.api_url = cli.config[:api_url]
+ChefRundeck.client_key = cli.config[:client_key]
 ChefRundeck.configure
 
 begin
