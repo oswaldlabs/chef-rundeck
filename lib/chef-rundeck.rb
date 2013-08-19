@@ -18,6 +18,7 @@ require 'sinatra/base'
 require 'chef'
 require 'chef/node'
 require 'chef/mixin/xml_escape'
+require 'chef/rest'
 
 class ChefRundeck < Sinatra::Base
 
@@ -26,22 +27,32 @@ class ChefRundeck < Sinatra::Base
   class << self
     attr_accessor :config_file
     attr_accessor :username
+    attr_accessor :api_url
     attr_accessor :web_ui_url
+    attr_accessor :client_key
 
     def configure
       Chef::Config.from_file(ChefRundeck.config_file)
-      client = Chef::Client.new
-      client.run_ohai
-      client.register
       Chef::Log.level = Chef::Config[:log_level]
+
+      unless ChefRundeck.api_url
+        ChefRundeck.api_url = Chef::Config[:chef_server_url]
+      end
+
+      unless ChefRundeck.client_key
+        ChefRundeck.client_key = Chef::Config[:client_key]
+      end
     end
   end
 
   get '/' do
     content_type 'text/xml'
     response = '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE project PUBLIC "-//DTO Labs Inc.//DTD Resources Document 1.0//EN" "project.dtd"><project>'
-    Chef::Node.list(true).each do |node_array|
-      node = node_array[1]
+    rest = Chef::REST.new(ChefRundeck.api_url, ChefRundeck.username, ChefRundeck.client_key)
+    nodes = rest.get_rest("/nodes/")    
+      
+    nodes.keys.each do |node_name|
+      node = rest.get_rest("/nodes/#{node_name}")
       #--
       # Certain features in Rundeck require the osFamily value to be set to 'unix' to work appropriately. - SRK
       #++
@@ -49,7 +60,7 @@ class ChefRundeck < Sinatra::Base
       response << <<-EOH
 <node name="#{xml_escape(node[:fqdn])}"
       type="Node"
-      description="#{xml_escape(node.name)}"
+      description="#{xml_escape(node_name)}"
       osArch="#{xml_escape(node[:kernel][:machine])}"
       osFamily="#{xml_escape(os_family)}"
       osName="#{xml_escape(node[:platform])}"
@@ -57,7 +68,7 @@ class ChefRundeck < Sinatra::Base
       tags="#{xml_escape([node.chef_environment, node[:tags].join(','), node.run_list.roles.join(',')].join(','))}"
       username="#{xml_escape(ChefRundeck.username)}"
       hostname="#{xml_escape(node[:fqdn])}"
-      editUrl="#{xml_escape(ChefRundeck.web_ui_url)}/nodes/#{xml_escape(node.name)}/edit"/>
+      editUrl="#{xml_escape(ChefRundeck.web_ui_url)}/nodes/#{xml_escape(node_name)}/edit"/>
 EOH
     end
     response << "</project>"
