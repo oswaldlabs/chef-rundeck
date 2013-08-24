@@ -73,8 +73,9 @@ class ChefRundeck < Sinatra::Base
       # Certain features in Rundeck require the osFamily value to be set to 'unix' to work appropriately. - SRK
       #++
       os_family = node[:kernel][:os] =~ /windows/i ? 'windows' : 'unix'
+      nodeexec = node[:kernel][:os] =~ /windows/i ? "node-executor=\"overthere-winrm\"" : ''
       response << <<-EOH
-<node name="#{xml_escape(node[:fqdn])}" 
+<node name="#{xml_escape(node[:fqdn])}" #{nodeexec} 
       type="Node" 
       description="#{xml_escape(node.name)}"
       osArch="#{xml_escape(node[:kernel][:machine])}"
