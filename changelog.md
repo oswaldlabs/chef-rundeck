@@ -1,4 +1,11 @@
  # Changelog - 1.0.0
+ ## Release Summary
+  * chef-rundeck is under new management (GitHub org name is 'oswaldlabs').  We use it at work in production and we are serious about maintaining it.  If you have suggestions or code that you would like to contribute, particularly if it improves our test coverage, please send us a pull request or open a GitHub issue.
+  * A basic functioning test suite that builds under Travis-CI and Ruby 1.9.2/1.9.3, connects to a Hosted Chef organization and generates a simple Rundeck resource model.  ("rake spec" to test it for yourself!)
+  * chef-rundeck should now drop a pidfile at startup and remove it during normal shutdown.
+  * Chef node tags now appear as tags in the generated Rundeck resource model.  (Thanks, giorgio-v!)
+
+ ## Detailed Changes 
  * [Tags from node](https://github.com/oswaldlabs/chef-rundeck/commit/d83373be4b903595d4db30d8c41a0a3bad340994) (giorgio-v)
  * [Initial attempt at Travis-ification.](https://github.com/oswaldlabs/chef-rundeck/commit/f64bdfce1dd12368f8c2364dd29b8d8acc63c606) (Steven Wagner)
  * [Slight refactoring for Ruby 1.9/RSpec + Travis ...](https://github.com/oswaldlabs/chef-rundeck/commit/89b1e22ebd7b611aa1ce8f28d1364a24cbddb814) (Steven Wagner)
