@@ -17,6 +17,7 @@ Gem::Specification.new do |s|
     "LICENSE",
     "README.md"
   ]
+  s.license = ['MIT']
   s.files = [
     ".document",
     "LICENSE",
