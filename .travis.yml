@@ -9,7 +9,6 @@ rvm:
 gemfile:
   - gemfiles/Gemfile.chef-11
   - gemfiles/Gemfile.chef-10
-  - gemfiles/Gemfile.chef-master
 before_script:
   - sudo ./spec/support/setup-test.sh
 script:
