@@ -23,7 +23,6 @@ Gem::Specification.new do |s|
     "NOTICE",
     "README.md",
     "Rakefile",
-    "VERSION",
     "bin/chef-rundeck",
     "lib/chef-rundeck.rb",
     "spec/chef-rundeck_spec.rb",
