@@ -4,12 +4,10 @@ language: ruby
 env:
   - CI=true
 rvm:
-  - 1.9.2
   - 1.9.3
+  - 2.0.0
 gemfile:
-  - Gemfile
+  - gemfiles/Gemfile.chef-11
+  - gemfiles/Gemfile.chef-10
 before_script:
   - sudo ./spec/support/setup-test.sh
-env:
-  - CHEF_VERSION=10.28.0
-  - CHEF_VERSION=11.6.0
