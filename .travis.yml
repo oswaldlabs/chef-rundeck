@@ -8,5 +8,8 @@ rvm:
   - 1.9.3
 gemfile:
   - Gemfile
-before_script: 
+before_script:
   - sudo ./spec/support/setup-test.sh
+env:
+  - CHEF_VERSION=10.28.0
+  - CHEF_VERSION=11.6.0
