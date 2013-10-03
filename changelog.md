@@ -1,3 +1,6 @@
+ # Changelog - 1.0.1
+ ## Release Summary
+  * Fixes to allow us to test Chef 11 and Chef 10 in Travis, based on the Chefspec way.
  # Changelog - 1.0.0
  ## Release Summary
   * chef-rundeck is under new management (GitHub org name is 'oswaldlabs').  We use it at work in production and we are serious about maintaining it.  If you have suggestions or code that you would like to contribute, particularly if it improves our test coverage, please send us a pull request or open a GitHub issue.
