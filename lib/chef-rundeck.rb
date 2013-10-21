@@ -20,6 +20,8 @@ require 'chef/node'
 require 'chef/mixin/xml_escape'
 require 'chef/rest'
 
+require 'chef-rundeck/vendor/partial_search'
+
 class ChefRundeck < Sinatra::Base
 
   include Chef::Mixin::XMLEscape
@@ -30,6 +32,7 @@ class ChefRundeck < Sinatra::Base
     attr_accessor :api_url
     attr_accessor :web_ui_url
     attr_accessor :client_key
+    attr_accessor :use_partial_search
 
     def configure
       Chef::Config.from_file(ChefRundeck.config_file)
@@ -46,32 +49,77 @@ class ChefRundeck < Sinatra::Base
   end
 
   get '/' do
+    nodes = if ChefRundeck.use_partial_search
+      request_nodes_via_partial_search
+    else
+      request_nodes_via_rest
+    end
+
     content_type 'text/xml'
     response = '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE project PUBLIC "-//DTO Labs Inc.//DTD Resources Document 1.0//EN" "project.dtd"><project>'
-    rest = Chef::REST.new(ChefRundeck.api_url, ChefRundeck.username, ChefRundeck.client_key)
-    nodes = rest.get_rest("/nodes/")    
-      
-    nodes.keys.each do |node_name|
-      node = rest.get_rest("/nodes/#{node_name}")
-      #--
-      # Certain features in Rundeck require the osFamily value to be set to 'unix' to work appropriately. - SRK
-      #++
-      os_family = node[:kernel][:os] =~ /windows/i ? 'windows' : 'unix'
-      response << <<-EOH
-<node name="#{xml_escape(node[:fqdn])}"
+    nodes.each do |node|
+      begin
+        response << <<-EOH
+<node name="#{xml_escape(node['fqdn'])}"
       type="Node"
-      description="#{xml_escape(node_name)}"
-      osArch="#{xml_escape(node[:kernel][:machine])}"
-      osFamily="#{xml_escape(os_family)}"
-      osName="#{xml_escape(node[:platform])}"
-      osVersion="#{xml_escape(node[:platform_version])}"
-      tags="#{xml_escape([node.chef_environment, node[:tags].join(','), node.run_list.roles.join(',')].join(','))}"
+      description="#{xml_escape(node['name'])}"
+      osArch="#{xml_escape(node['kernel_machine'])}"
+      osFamily="#{xml_escape(node['os_family'] =~ /windows/i ? 'windows' : 'unix')}"
+      osName="#{xml_escape(node['platform'])}"
+      osVersion="#{xml_escape(node['platform_version'])}"
+      tags="#{xml_escape([node['chef_environment'], node['tags'], node['roles']].flatten.join(','))}"
       username="#{xml_escape(ChefRundeck.username)}"
-      hostname="#{xml_escape(node[:fqdn])}"
-      editUrl="#{xml_escape(ChefRundeck.web_ui_url)}/nodes/#{xml_escape(node_name)}/edit"/>
+      hostname="#{xml_escape(node['fqdn'])}"
+      editUrl="#{xml_escape(ChefRundeck.web_ui_url)}/nodes/#{xml_escape(node['name'])}/edit"/>
 EOH
+      rescue
+        warn $!
+      end
     end
     response << "</project>"
     response
   end
+
+  def request_nodes_via_rest
+    rest = Chef::REST.new(ChefRundeck.api_url)
+    nodes = rest.get_rest('/nodes/')
+      
+    nodes.keys.map do |node_name|
+      node = rest.get_rest("/nodes/#{node_name}")
+      #--
+      # Certain features in Rundeck require the osFamily value to be set to 'unix' to work appropriately. - SRK
+      #++
+      { 'os_family' => (node[:kernel] && node[:kernel][:os] =~ /windows/i ? 'windows' : 'unix'),
+        'fqdn' => node[:fqdn],
+        'name' => node_name,
+        'kernel_machine' => (node[:kernel] && node[:kernel][:machine]),
+        'platform' => node[:platform],
+        'platform_version' => node[:platform_version],
+        'chef_environment' => node.chef_environment,
+        'tags' =>  node[:tags],
+        'roles' => node.run_list.roles
+      }
+    end
+  end
+
+  def request_nodes_via_partial_search
+    keys = {
+      kernel_os: ['kernel','os'],
+      fqdn: ['fqdn'],
+      name: ['name'],
+      kernel_machine: ['kernel','machine'],
+      platform: ['platform'],
+      platform_version: ['platform_version'],
+      chef_environment: ['chef_environment'],
+      tags:  ['tags'],
+      roles: ['roles']
+    }
+
+    results = Array.new
+    Chef::PartialSearch.new.search(:node, '*:*', keys: keys) do |o|
+      results << o
+    end
+    results
+  end
 end
+

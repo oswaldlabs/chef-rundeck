@@ -63,6 +63,13 @@ class ChefRundeckCLI
      :long => "--pidfile FILE",
      :description => "Prefix for our PID file, default: /var/run/chef-rundeck- ('PORT.pid' will be added)",
      :default => "/var/run/chef-rundeck"
+
+   option :use_partial_search,
+     :short => "-q",
+     :long => "--use-partial-search",
+     :description => "Use partial search for faster queries (requires Chef 11 server)",
+     :boolean => true
+
 end
 
 cli = ChefRundeckCLI.new
@@ -73,6 +80,7 @@ ChefRundeck.username = cli.config[:username]
 ChefRundeck.web_ui_url = cli.config[:web_ui_url]
 ChefRundeck.api_url = cli.config[:api_url]
 ChefRundeck.client_key = cli.config[:client_key]
+ChefRundeck.use_partial_search = cli.config[:use_partial_search]
 ChefRundeck.configure
 
 begin
