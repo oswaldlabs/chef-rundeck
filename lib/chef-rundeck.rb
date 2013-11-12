@@ -82,7 +82,7 @@ class ChefRundeck < Sinatra::Base
       osFamily="#{xml_escape(os_family)}"
       osName="#{xml_escape(node[:platform])}"
       osVersion="#{xml_escape(node[:platform_version])}"
-      tags="#{xml_escape(node.run_list.roles.concat(node.run_list.recipes).join(','))}"
+      tags="#{xml_escape(node.run_list.roles.concat(node.run_list.recipes).join(',') + ',' + node.chef_environment)}"
       username="#{xml_escape(username)}"
       hostname="#{xml_escape(node[hostname])}"
       editUrl="#{xml_escape(ChefRundeck.web_ui_url)}/nodes/#{xml_escape(node.name)}/edit"/>
