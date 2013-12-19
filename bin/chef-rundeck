@@ -52,6 +52,12 @@ class ChefRundeckCLI
      :description => "The base URL of the Chef Web UI",
      :default => "https://manage.opscode.com"
 
+   option :host,
+     :short => "-o HOST",
+     :long => "--host HOST",
+     :description => "Listen on HOST (default: localhost)",
+     :default => "localhost"
+
    option :port,
      :short => "-p PORT",
      :long => "--port PORT",
@@ -84,5 +90,5 @@ rescue Exception => e
    puts "== Error writing pid file #{pid}!"
 end
 
-ChefRundeck.run! :bind => 'localhost', :port => cli.config[:port]
+ChefRundeck.run! :bind => cli.config[:host], :port => cli.config[:port]
 
