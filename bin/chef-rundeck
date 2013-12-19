@@ -84,5 +84,5 @@ rescue Exception => e
    puts "== Error writing pid file #{pid}!"
 end
 
-ChefRundeck.run! :host => 'localhost', :port => cli.config[:port] 
+ChefRundeck.run! :bind => 'localhost', :port => cli.config[:port]
 
