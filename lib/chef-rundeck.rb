@@ -87,16 +87,7 @@ EOH
     response = '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE project PUBLIC "-//DTO Labs Inc.//DTD Resources Document 1.0//EN" "project.dtd"><project>'
     Chef::Node.list(true).each do |node_array|
       node = node_array[1]
-
-      begin
-        REQUIRED_ATTRS.each do | attr |
-          raise MissingAttribute.new(attr) if not node.attribute?(attr)
-        end
-      rescue MissingAttribute => e
-        Chef::Log.error("Node #{node.name} is missing required " \
-                        "attribute: #{e.name}")
-        next
-      end
+      if node_is_valid? node
       #--
       # Certain features in Rundeck require the osFamily value to be set to 'unix' to work appropriately. - SRK
       #++
@@ -115,10 +106,23 @@ EOH
       editUrl="#{xml_escape(ChefRundeck.web_ui_url)}/nodes/#{xml_escape(node.name)}/edit"/>
 EOH
     end
+  end
     response << "</project>"
 
     Chef::Log.debug(response)
 
     response
   end
+end
+
+def node_is_valid?(node)
+  node[:fqdn] and
+    node.name and
+    node[:kernel] and
+    node[:kernel][:machine] and
+    node[:kernel][:os] and
+    node[:platform] and
+    node[:platform_version] and
+    node.chef_environment and
+    node.run_list.respond_to?(:join)    
 end
