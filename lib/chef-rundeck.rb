@@ -63,14 +63,14 @@ class ChefRundeck < Sinatra::Base
             response = build_project projects[project]['pattern'], projects[project]['username'], (projects[project]['hostname'].nil? ? "fqdn" : projects[project]['hostname']), projects[project]['attributes']
             response
           end
-      end
-      else
-        get '/' do
-          content_type 'text/xml'
-          Chef::Log.info("Loading all nodes for /")
-          response = build_project
-	        response
         end
+      end
+      
+      get '/' do
+        content_type 'text/xml'
+        Chef::Log.info("Loading all nodes for /")
+        response = build_project
+        response
       end
     end
   end
@@ -150,7 +150,6 @@ def get_custom_attr (obj, params)
   end
   return value.nil? ? "" : value.to_s
 end
-
 
 def node_is_valid?(node)
   node[:fqdn] and

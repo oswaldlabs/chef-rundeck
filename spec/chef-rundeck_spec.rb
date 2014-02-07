@@ -7,6 +7,7 @@ describe 'ChefRundeck' do
     ChefRundeck.config_file = "#{ENV['TRAVIS_BUILD_DIR']}/spec/support/client.rb"
     ChefRundeck.username = ENV['USER']
     ChefRundeck.web_ui_url = 'https://manage.opscode.com'
+    ChefRundeck.project_config = "#{ENV['TRAVIS_BUILD_DIR']}/spec/support/chef-rundeck.json"
     ChefRundeck.configure
   end
   it 'fetch to root should return 200' do
@@ -16,5 +17,21 @@ describe 'ChefRundeck' do
   it 'fetched document should be Nokogiri-parseable XML document' do
     get '/'
     Nokogiri::XML(last_response.body).document.should be_true
+  end
+  it 'fetched document should be node1 only' do
+    get '/node1_systems'
+    last_response.should be_ok
+    Nokogiri::XML(last_response.body).xpath("//project/node[@name='node1.chefrundeck.local']").length().should == 1
+    Nokogiri::XML(last_response.body).xpath("//project/node[@name='node2.chefrundeck.local']").length().should == 0
+  end
+  it 'fetched document should be node2 only' do
+    get '/node2_systems'
+    last_response.should be_ok
+    Nokogiri::XML(last_response.body).xpath("//project/node[@name='node1.chefrundeck.local']").length().should == 0
+    Nokogiri::XML(last_response.body).xpath("//project/node[@name='node2.chefrundeck.local']").length().should == 1
+  end 
+  it 'check custom attributes on node2 only' do
+    get '/node2_systems'
+    Nokogiri::XML(last_response.body).xpath("//project/node[@name='node2.chefrundeck.local']/attribute").length().should == 2
   end
 end
