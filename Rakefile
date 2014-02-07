@@ -1,5 +1,4 @@
 require 'rubygems'
-require 'rake/dsl_definition'
 require 'rake'
 
 begin
@@ -24,6 +23,7 @@ rescue LoadError
 end
 
 require 'rspec/core/rake_task'
+ENV['TRAVIS_BUILD_DIR'] = "." unless ENV.has_key?('TRAVIS_BUILD_DIR')
 RSpec::Core::RakeTask.new(:spec) do |spec|
   spec.rspec_opts = [ '-I', 'lib', '-I', 'spec' ]
   spec.pattern = FileList['spec/**/*_spec.rb']
@@ -34,8 +34,6 @@ RSpec::Core::RakeTask.new(:rcov) do |spec|
   spec.pattern = FileList['spec/**/*_spec.rb']
   spec.rcov = true
 end
-
-task :spec => :check_dependencies
 
 task :default => :spec
 

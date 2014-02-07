@@ -5,35 +5,33 @@
 
 Gem::Specification.new do |s|
   s.name = "chef-rundeck"
-  s.version = "0.2.2"
+  s.version = "1.0.1"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["Adam Jacob"]
-  s.date = "2012-06-07"
+  s.authors = ["Adam Jacob", "Brian Scott", "Steven Wagner"]
+  s.date = "2011-11-07"
   s.description = "Provides a resource endpoint for RunDeck from a Chef Server"
-  s.email = "adam@opscode.com"
+  s.email = "brainscott@gmail.com"
   s.executables = ["chef-rundeck"]
   s.extra_rdoc_files = [
     "LICENSE",
-    "README.rdoc"
+    "README.md"
   ]
   s.files = [
     ".document",
     "LICENSE",
     "NOTICE",
-    "README.rdoc",
-    "Rakefile",
-    "VERSION",
+    "README.md",
+    "Rakefile", 
     "bin/chef-rundeck",
-    "chef-rundeck.gemspec",
     "lib/chef-rundeck.rb",
     "spec/chef-rundeck_spec.rb",
     "spec/spec.opts",
     "spec/spec_helper.rb"
   ]
-  s.homepage = "http://github.com/opscode/chef-rundeck"
+  s.homepage = "http://github.com/oswaldlabs/chef-rundeck"
   s.require_paths = ["lib"]
-  s.rubygems_version = "1.8.15"
+  s.rubygems_version = "1.8.10"
   s.summary = "Integrates Chef with RunDeck"
 
   if s.respond_to? :specification_version then
@@ -45,12 +43,15 @@ Gem::Specification.new do |s|
       s.add_runtime_dependency(%q<mixlib-cli>, [">= 0"])
       s.add_development_dependency(%q<rspec>, [">= 1.2.9"])
       s.add_development_dependency(%q<yard>, [">= 0"])
+      s.add_development_dependency(%q<rack-test>, [">= 0"])
+      s.add_development_dependency(%q<nokogiri>, [">= 0"])
     else
       s.add_dependency(%q<sinatra>, [">= 0"])
       s.add_dependency(%q<chef>, [">= 0"])
       s.add_dependency(%q<mixlib-cli>, [">= 0"])
       s.add_dependency(%q<rspec>, [">= 1.2.9"])
       s.add_dependency(%q<yard>, [">= 0"])
+      s.add_development_dependency(%q<rack-test>, [">= 0"])
     end
   else
     s.add_dependency(%q<sinatra>, [">= 0"])
@@ -58,6 +59,7 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<mixlib-cli>, [">= 0"])
     s.add_dependency(%q<rspec>, [">= 1.2.9"])
     s.add_dependency(%q<yard>, [">= 0"])
+    s.add_dependency(%q<rack-test>, [">= 0"])
   end
 end
 

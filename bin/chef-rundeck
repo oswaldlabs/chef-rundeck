@@ -23,6 +23,16 @@ require 'mixlib/cli'
 
 class ChefRundeckCLI
   include Mixlib::CLI
+
+   option :api_url,
+     :short => "-a API_URL",
+     :long => "--api-url API_URL",
+     :description => "The base URL of the Chef REST API"
+
+   option :client_key,
+     :short => "-k KEYFILE",
+     :long => "--key-file KEYFILE",
+     :description => "The client.pem to sign requests"
  
    option :config_file,
       :short => "-c CONFIG",
@@ -34,19 +44,25 @@ class ChefRundeckCLI
      :short => "-u USERNAME",
      :long => "--username USERNAME",
      :default => ENV['USER'],
-     :description => "The default username for rundeck to SSH as"
+     :description => "The Username for Rundeck to SSH as"
 
    option :web_ui_url,
      :short => "-w WEB_UI_URL",
      :long => "--web-ui-url WEB_UI_URL",
-     :description => "The base URL of the Chef Web UI, default http://localhost:4040",
-     :default => "http://localhost:4040"
-   
+     :description => "The base URL of the Chef Web UI",
+     :default => "https://manage.opscode.com"
+
    option :project_config,
      :short => "-f PROJECT_CONFIG",
      :long => "--project-config PROJECT_CONFIG",
      :description => "JSON project configuration file, default /etc/chef/rundeck.json",
      :default => "/etc/chef/rundeck.json"
+
+   option :host,
+     :short => "-o HOST",
+     :long => "--host HOST",
+     :description => "Listen on HOST (default: localhost)",
+     :default => "localhost"
 
    option :port,
      :short => "-p PORT",
@@ -54,11 +70,11 @@ class ChefRundeckCLI
      :description => "The port to run on, default 9980",
      :default => 9980
 
-   option :bind,
-     :short => "-b ADDRESS",
-     :long => "--bind ADDRESS",
-     :description => "The address to run on, default 0.0.0.0",
-     :default => "0.0.0.0"
+   option :pidfile,
+     :short => "-P FILE",
+     :long => "--pidfile FILE",
+     :description => "Prefix for our PID file, default: /var/run/chef-rundeck- ('PORT.pid' will be added)",
+     :default => "/var/run/chef-rundeck"
 end
 
 cli = ChefRundeckCLI.new
@@ -67,8 +83,19 @@ cli.parse_options
 ChefRundeck.config_file = cli.config[:config_file]
 ChefRundeck.username = cli.config[:username]
 ChefRundeck.web_ui_url = cli.config[:web_ui_url]
+ChefRundeck.api_url = cli.config[:api_url]
+ChefRundeck.client_key = cli.config[:client_key]
 ChefRundeck.project_config = cli.config[:project_config]
 ChefRundeck.configure
 
-ChefRundeck.run! :bind => cli.config[:bind], :port => cli.config[:port] 
+begin
+   pid = "#{cli.config[:pidfile]}-#{cli.config[:port]}.pid"
+   puts "Writing to #{pid}"
+   File.open(pid, 'w'){ |f| f.write(Process.pid) }
+   at_exit { File.delete(pid) if File.exist?(pid) }
+rescue Exception => e
+   puts "== Error writing pid file #{pid}!"
+end
+
+ChefRundeck.run! :bind => cli.config[:host], :port => cli.config[:port]
 
