@@ -5,7 +5,7 @@
 
 Gem::Specification.new do |s|
   s.name = "chef-rundeck"
-  s.version = "1.0.1"
+  s.version = "2.0.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Adam Jacob", "Brian Scott", "Steven Wagner"]
@@ -22,7 +22,7 @@ Gem::Specification.new do |s|
     "LICENSE",
     "NOTICE",
     "README.md",
-    "Rakefile", 
+    "Rakefile",
     "bin/chef-rundeck",
     "lib/chef-rundeck.rb",
     "spec/chef-rundeck_spec.rb",
@@ -62,4 +62,3 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<rack-test>, [">= 0"])
   end
 end
-

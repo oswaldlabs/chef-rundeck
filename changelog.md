@@ -1,4 +1,4 @@
- # Changelog - 1.0.2
+ # Changelog - 2.0.0
  ## Release Summary
   * Added support for search defined project resource definitions
   * Added support for Rundeck 2.0 and custom attributes
@@ -14,7 +14,7 @@
   * chef-rundeck should now drop a pidfile at startup and remove it during normal shutdown.
   * Chef node tags now appear as tags in the generated Rundeck resource model.  (Thanks, giorgio-v!)
 
- ## Detailed Changes 
+ ## Detailed Changes
  * [Tags from node](https://github.com/oswaldlabs/chef-rundeck/commit/d83373be4b903595d4db30d8c41a0a3bad340994) (giorgio-v)
  * [Initial attempt at Travis-ification.](https://github.com/oswaldlabs/chef-rundeck/commit/f64bdfce1dd12368f8c2364dd29b8d8acc63c606) (Steven Wagner)
  * [Slight refactoring for Ruby 1.9/RSpec + Travis ...](https://github.com/oswaldlabs/chef-rundeck/commit/89b1e22ebd7b611aa1ce8f28d1364a24cbddb814) (Steven Wagner)
