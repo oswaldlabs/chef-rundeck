@@ -46,6 +46,12 @@ class ChefRundeckCLI
      :default => ENV['USER'],
      :description => "The Username for Rundeck to SSH as"
 
+   option :ssh_username,
+     :short => "-x USERNAME",
+     :long => "--ssh_username USERNAME",
+     :default => ENV['USER'],
+     :description => "The Username for Rundeck to SSH as"
+
    option :web_ui_url,
      :short => "-w WEB_UI_URL",
      :long => "--web-ui-url WEB_UI_URL",
@@ -82,6 +88,7 @@ cli.parse_options
 
 ChefRundeck.config_file = cli.config[:config_file]
 ChefRundeck.username = cli.config[:username]
+ChefRundeck.ssh_username = cli.config[:ssh_username]
 ChefRundeck.web_ui_url = cli.config[:web_ui_url]
 ChefRundeck.api_url = cli.config[:api_url]
 ChefRundeck.client_key = cli.config[:client_key]

@@ -39,6 +39,7 @@ class ChefRundeck < Sinatra::Base
     attr_accessor :web_ui_url
     attr_accessor :api_url
     attr_accessor :client_key
+    attr_accessor :ssh_username
     attr_accessor :project_config
 
     def configure
@@ -121,7 +122,7 @@ def build_node (node, username, hostname, custom_attributes)
       roles="#{xml_escape(node.run_list.roles.join(','))}"
       recipes="#{xml_escape(node.run_list.recipes.join(','))}"
       environment="#{xml_escape(node.chef_environment)}"
-      username="#{xml_escape(username)}"
+      username="#{xml_escape(ChefRundeck.ssh_username)}"
       hostname="#{xml_escape(node[hostname])}"
       editUrl="#{xml_escape(ChefRundeck.web_ui_url)}/nodes/#{xml_escape(node.name)}/edit" #{custom_attributes.nil? ? '/': ''}>
 EOH
