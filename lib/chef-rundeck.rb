@@ -1,12 +1,12 @@
 #
 # Copyright 2010, Opscode, Inc.
-#
+# 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+# 
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
+# 
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,14 +30,16 @@ class MissingAttribute < StandardError
 end
 
 class ChefRundeck < Sinatra::Base
-	
+
+  include Chef::Mixin::XMLEscape
 
   class << self
     attr_accessor :config_file
     attr_accessor :username
-    attr_accessor :api_url
     attr_accessor :web_ui_url
+    attr_accessor :api_url
     attr_accessor :client_key
+    attr_accessor :project_config
 
     def configure
       Chef::Config.from_file(ChefRundeck.config_file)
@@ -50,69 +52,103 @@ class ChefRundeck < Sinatra::Base
       unless ChefRundeck.client_key
         ChefRundeck.client_key = Chef::Config[:client_key]
       end
-    end
 
-    def create_node_xml(node,node_name)
-        begin
-	      #--
-	      # Certain features in Rundeck require the osFamily value to be set to 'unix' to work appropriately. - SRK
-	      #++
-	      os_family = node[:kernel][:os] =~ /windows/i ? 'windows' : 'unix'
- <<-EOH
-	<node name="#{Chef::Mixin::XMLEscape::xml_escape(node[:fqdn])}"
-	      type="Node"
-	      description="#{Chef::Mixin::XMLEscape::xml_escape(node_name)}"
-	      osArch="#{Chef::Mixin::XMLEscape::xml_escape(node[:kernel][:machine])}"
-	      osFamily="#{Chef::Mixin::XMLEscape::xml_escape(os_family)}"
-	      osName="#{Chef::Mixin::XMLEscape::xml_escape(node[:platform])}"
-	      osVersion="#{Chef::Mixin::XMLEscape::xml_escape(node[:platform_version])}"
-	      tags="#{Chef::Mixin::XMLEscape::xml_escape([node.chef_environment, node[:tags].join(','), node.run_list.roles.join(',')].join(','))}"
-	      username="#{Chef::Mixin::XMLEscape::xml_escape(ChefRundeck.username)}"
-	      hostname="#{Chef::Mixin::XMLEscape::xml_escape(node[:fqdn])}"
-	      editUrl="#{Chef::Mixin::XMLEscape::xml_escape(ChefRundeck.web_ui_url)}/nodes/#{Chef::Mixin::XMLEscape::xml_escape(node_name)}/edit"/>
-EOH
-
- 	rescue => e
-	 	Chef::Log.error("=== ERROR: could not generate xml for Node: #{node_name} \n #{e.message}")
-		Chef::Log.debug(e.backtrace.join('\n'))
-		return "<node name=\"#{Chef::Mixin::XMLEscape::xml_escape(node_name)}\" description=\"Error occured retrieving node information\" 
-		hostname=\"Error \"  username=\"Error\" />"
-	end
-
+      if (File.exists?(ChefRundeck.project_config)) then
+        Chef::Log.info("Using JSON project file #{ChefRundeck.project_config}")
+        projects = File.open(ChefRundeck.project_config, "r") { |f| JSON.parse(f.read) }
+        projects.keys.each do | project |
+          get "/#{project}" do
+            content_type 'text/xml'
+            Chef::Log.info("Loading nodes for /#{project}")
+            response = build_project projects[project]['pattern'], projects[project]['username'], (projects[project]['hostname'].nil? ? "fqdn" : projects[project]['hostname']), projects[project]['attributes']
+            response
+          end
+        end
+      end
+      
+      get '/' do
+        content_type 'text/xml'
+        Chef::Log.info("Loading all nodes for /")
+        response = build_project
+        response
+      end
     end
   end
 
-  get '/' do
-    content_type 'text/xml'
-    response = '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE project PUBLIC "-//DTO Labs Inc.//DTD Resources Document 1.0//EN" "project.dtd"><project>'
-    Chef::Node.list(true).each do |node_array|
-      node = node_array[1]
+  def build_project (pattern="*:*", username=ChefRundeck.username, hostname="fqdn", custom_attributes=nil)
+    response =  '<?xml version="1.0" encoding="UTF-8"?>'
+    response << '<!DOCTYPE project PUBLIC "-//DTO Labs Inc.//DTD Resources Document 1.0//EN" "project.dtd">'
+    response << '<project>'
+
+    q = Chef::Search::Query.new
+    q.search("node",pattern) do |node|
+      
+      begin
       if node_is_valid? node
+        response << build_node(node, username, hostname, custom_attributes)
+      else
+        Chef::Log.warn("invalid node element: #{node.inspect}")
+      end
+      rescue Exception => e
+        Chef::Log.error("=== could not generate xml for Node: #{node.name} - #{e.message}")
+        Chef::Log.debug(e.backtrace.join('\n'))
+      end
+    end
+    
+    response << "</project>"
+    Chef::Log.debug(response)
+    
+    return response
+  end
+end
+
+def build_node (node, username, hostname, custom_attributes)
       #--
       # Certain features in Rundeck require the osFamily value to be set to 'unix' to work appropriately. - SRK
       #++
-      os_family = node[:kernel][:os] =~ /windows/i ? 'windows' : 'unix'
-      response << <<-EOH
-<node name="#{xml_escape(node[:fqdn])}" 
+      data = ''
+      os_family = node[:kernel][:os] =~ /winnt|windows/i ? 'winnt' : 'unix'
+      nodeexec = node[:kernel][:os] =~ /winnt|windows/i ? "node-executor=\"overthere-winrm\"" : ''
+      data << <<-EOH
+<node name="#{xml_escape(node[:fqdn])}" #{nodeexec} 
       type="Node" 
       description="#{xml_escape(node.name)}"
       osArch="#{xml_escape(node[:kernel][:machine])}"
       osFamily="#{xml_escape(os_family)}"
       osName="#{xml_escape(node[:platform])}"
       osVersion="#{xml_escape(node[:platform_version])}"
-      tags="#{xml_escape([node.chef_environment, node.run_list.roles.join(',')].join(','))}"
-      username="#{xml_escape(ChefRundeck.username)}"
-      hostname="#{xml_escape(node[:fqdn])}"
-      editUrl="#{xml_escape(ChefRundeck.web_ui_url)}/nodes/#{xml_escape(node.name)}/edit"/>
+      tags="#{xml_escape(node.run_list.roles.concat(node.run_list.recipes).join(',') + ',' + node.chef_environment)}"
+      roles="#{xml_escape(node.run_list.roles.join(','))}"
+      recipes="#{xml_escape(node.run_list.recipes.join(','))}"
+      environment="#{xml_escape(node.chef_environment)}"
+      username="#{xml_escape(username)}"
+      hostname="#{xml_escape(node[hostname])}"
+      editUrl="#{xml_escape(ChefRundeck.web_ui_url)}/nodes/#{xml_escape(node.name)}/edit" #{custom_attributes.nil? ? '/': ''}>
 EOH
+     if !custom_attributes.nil? then
+       custom_attributes.each do |attr|
+        attr_name = attr
+        attr_value = get_custom_attr(node, attr.split('.'))
+        data << <<-EOH
+      <attribute name="#{attr_name}"><![CDATA[#{attr_value}]]></attribute>
+EOH
+        end
+        data << "</node>"
+      end
+
+  return data
+end
+
+def get_custom_attr (obj, params)
+  value = obj
+  Chef::Log.debug("loading custom attributes for node: #{obj} with #{params}")
+  params.each do |p|   
+    value = value[p.to_sym]
+    if value.nil? then
+      break
     end
   end
-    response << "</project>"
-
-    Chef::Log.debug(response)
-
-    response
-  end
+  return value.nil? ? "" : value.to_s
 end
 
 def node_is_valid?(node)
@@ -123,6 +159,5 @@ def node_is_valid?(node)
     node[:kernel][:os] and
     node[:platform] and
     node[:platform_version] and
-    node.chef_environment and
-    node.run_list.respond_to?(:join)    
+    node.chef_environment     
 end

@@ -1,3 +1,9 @@
+ # Changelog - 1.0.2
+ ## Release Summary
+  * Added support for search defined project resource definitions
+  * Added support for Rundeck 2.0 and custom attributes
+  * Added support for Windows Systems in Rundeck node configuration (via overthere-winrm)
+  * Refactor xml node generation  
  # Changelog - 1.0.1
  ## Release Summary
   * Fixes to allow us to test Chef 11 and Chef 10 in Travis, based on the Chefspec way.
