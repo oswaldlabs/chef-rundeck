@@ -19,6 +19,10 @@ require 'chef'
 require 'chef/node'
 require 'chef/mixin/xml_escape'
 require 'chef/rest'
+require 'chef/role'
+require 'chef/environment'
+require 'chef/data_bag'
+require 'chef/data_bag_item'
 
 REQUIRED_ATTRS = [ :kernel, :fqdn, :platform, :platform_version ]
 
@@ -80,8 +84,7 @@ class ChefRundeck < Sinatra::Base
     response << '<!DOCTYPE project PUBLIC "-//DTO Labs Inc.//DTD Resources Document 1.0//EN" "project.dtd">'
     response << '<project>'
 
-    q = Chef::Search::Query.new
-    q.partial_search(:node, pattern,
+    Chef::PartialSearch.new.search(:node, pattern,
       :keys => { 'name' => [ 'name' ],
                  'kernel_machine' => [ 'kernel', 'machine' ],
                  'kernel_os' => [ 'kernel', 'os' ],
