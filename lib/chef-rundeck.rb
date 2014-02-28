@@ -81,7 +81,17 @@ class ChefRundeck < Sinatra::Base
     response << '<project>'
 
     q = Chef::Search::Query.new
-    q.search("node",pattern) do |node|
+    q.partial_search(:node, pattern,
+      :keys => { 'name' => [ 'name' ],
+                 'kernel_machine' => [ 'kernel', 'machine' ],
+                 'kernel_os' => [ 'kernel', 'os' ],
+                 'fqdn' => [ 'fqdn' ],
+                 'platform' => [ 'platform'],
+                 'platform_version' => [ 'platform_version' ],
+                 'run_list' => [ 'run_list' ],
+                 'chef_environment' => [ 'chef_environment'],
+                 'hostname' => [ 'hostname' ]
+               }) do |node|
       
       begin
       if node_is_valid? node
@@ -107,23 +117,23 @@ def build_node (node, username, hostname, custom_attributes)
       # Certain features in Rundeck require the osFamily value to be set to 'unix' to work appropriately. - SRK
       #++
       data = ''
-      os_family = node[:kernel][:os] =~ /winnt|windows/i ? 'winnt' : 'unix'
-      nodeexec = node[:kernel][:os] =~ /winnt|windows/i ? "node-executor=\"overthere-winrm\"" : ''
+      os_family = node['kernel_os'] =~ /winnt|windows/i ? 'winnt' : 'unix'
+      nodeexec = node['kernel_os'] =~ /winnt|windows/i ? "node-executor=\"overthere-winrm\"" : ''
       data << <<-EOH
-<node name="#{xml_escape(node[:fqdn])}" #{nodeexec} 
+<node name="#{xml_escape(node['fqdn'])}" #{nodeexec} 
       type="Node" 
-      description="#{xml_escape(node.name)}"
-      osArch="#{xml_escape(node[:kernel][:machine])}"
+      description="#{xml_escape(node['name'])}"
+      osArch="#{xml_escape(node['kernel_machine'])}"
       osFamily="#{xml_escape(os_family)}"
-      osName="#{xml_escape(node[:platform])}"
-      osVersion="#{xml_escape(node[:platform_version])}"
-      tags="#{xml_escape(node.run_list.roles.concat(node.run_list.recipes).join(',') + ',' + node.chef_environment)}"
-      roles="#{xml_escape(node.run_list.roles.join(','))}"
-      recipes="#{xml_escape(node.run_list.recipes.join(','))}"
-      environment="#{xml_escape(node.chef_environment)}"
+      osName="#{xml_escape(node['platform'])}"
+      osVersion="#{xml_escape(node['platform_version'])}"
+      tags="#{xml_escape(node['run_list']['roles'].concat(node['run_list']['recipes']).join(',') + ',' + node['chef_environment'])}"
+      roles="#{xml_escape(node['run_list']['roles'].join(','))}"
+      recipes="#{xml_escape(node['run_list']['recipes'].join(','))}"
+      environment="#{xml_escape(node['chef_environment'])}"
       username="#{xml_escape(username)}"
-      hostname="#{xml_escape(node[hostname])}"
-      editUrl="#{xml_escape(ChefRundeck.web_ui_url)}/nodes/#{xml_escape(node.name)}/edit" #{custom_attributes.nil? ? '/': ''}>
+      hostname="#{xml_escape(node['hostname'])}"
+      editUrl="#{xml_escape(ChefRundeck.web_ui_url)}/nodes/#{xml_escape(node['name'])}/edit" #{custom_attributes.nil? ? '/': ''}>
 EOH
      if !custom_attributes.nil? then
        custom_attributes.each do |attr|
@@ -152,12 +162,12 @@ def get_custom_attr (obj, params)
 end
 
 def node_is_valid?(node)
-  node[:fqdn] and
-    node.name and
-    node[:kernel] and
-    node[:kernel][:machine] and
-    node[:kernel][:os] and
-    node[:platform] and
-    node[:platform_version] and
-    node.chef_environment     
+  node['fqdn'] and
+  node['name'] and
+  node['kernel'] and
+  node['kernel_machine'] and
+  node['kernel_os'] and
+  node['platform'] and
+  node['platform_version'] and
+  node['chef_environment']
 end
