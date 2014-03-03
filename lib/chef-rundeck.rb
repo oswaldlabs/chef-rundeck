@@ -101,7 +101,7 @@ class ChefRundeck < Sinatra::Base
       end
     end
 
-    Chef::PartialSearch.new.search( :node, pattern, :keys ) do |node|
+    partial_search( :node, pattern, :keys ) do |node|
       
       begin
       if node_is_valid? node
