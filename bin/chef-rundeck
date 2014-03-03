@@ -87,6 +87,11 @@ class ChefRundeckCLI
      :long => "--timeout CACHE_TIMEOUT",
      :description => "Sets the response timeout in seconds for the query data.",
      :default => "30"
+
+   option :partial_search,
+     :long => "--partial-search TRUE/FALSE",
+     :description => "Enables partial searching, Chef 11 or greater.",
+     :default => "false"
 end
 
 cli = ChefRundeckCLI.new
@@ -99,7 +104,8 @@ ChefRundeck.api_url = cli.config[:api_url]
 ChefRundeck.client_key = cli.config[:client_key]
 ChefRundeck.project_config = cli.config[:project_config]
 ChefRundeck.environment = cli.config[:env]
-ChefRundeck.cache_timeout = cli.config[:cache_timeout]
+ChefRundeck.cache_timeout = cli.config[:cache_timeout].to_i
+ChefRundeck.partial_search = cli.config[:partial_search].to_bool
 ChefRundeck.configure
 
 begin
