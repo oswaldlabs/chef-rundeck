@@ -14,6 +14,7 @@
 # limitations under the License.
 #
 
+require 'sinatra'
 require 'sinatra/base'
 require 'chef'
 require 'chef/node'
@@ -40,6 +41,7 @@ class ChefRundeck < Sinatra::Base
     attr_accessor :api_url
     attr_accessor :client_key
     attr_accessor :project_config
+    attr_accessor :cache_timeout
 
     def configure
       Chef::Config.from_file(ChefRundeck.config_file)
@@ -53,6 +55,7 @@ class ChefRundeck < Sinatra::Base
         ChefRundeck.client_key = Chef::Config[:client_key]
       end
 
+
       if (File.exists?(ChefRundeck.project_config)) then
         Chef::Log.info("Using JSON project file #{ChefRundeck.project_config}")
         projects = File.open(ChefRundeck.project_config, "r") { |f| JSON.parse(f.read) }
@@ -60,8 +63,7 @@ class ChefRundeck < Sinatra::Base
           get "/#{project}" do
             content_type 'text/xml'
             Chef::Log.info("Loading nodes for /#{project}")
-            response = build_project projects[project]['pattern'], projects[project]['username'], (projects[project]['hostname'].nil? ? "fqdn" : projects[project]['hostname']), projects[project]['attributes']
-            response
+            send_file build_project project, projects[project]['pattern'], projects[project]['username'], (projects[project]['hostname'].nil? ? "fqdn" : projects[project]['hostname']), projects[project]['attributes']
           end
         end
       end
@@ -69,36 +71,53 @@ class ChefRundeck < Sinatra::Base
       get '/' do
         content_type 'text/xml'
         Chef::Log.info("Loading all nodes for /")
-        response = build_project
-        response
+        send_file build_project
       end
     end
   end
 
-  def build_project (pattern="*:*", username=ChefRundeck.username, hostname="fqdn", custom_attributes=nil)
-    response =  '<?xml version="1.0" encoding="UTF-8"?>'
-    response << '<!DOCTYPE project PUBLIC "-//DTO Labs Inc.//DTD Resources Document 1.0//EN" "project.dtd">'
-    response << '<project>'
+  def build_project (project="default", pattern="*:*", username=ChefRundeck.username, hostname="fqdn", custom_attributes=nil)
+    response = nil
+    begin
 
-    q = Chef::Search::Query.new
-    q.search("node",pattern) do |node|
+      # file is too new use it again
+      if (File.exists?("#{Dir.tmpdir}/chef-rundeck-#{project}.xml") && (Time.now - File.atime("#{Dir.tmpdir}/chef-rundeck-#{project}.xml") < ChefRundeck.cache_timeout.to_i)) then 
+        return "#{Dir.tmpdir}/chef-rundeck-#{project}.xml"
+      end
+
+      q = Chef::Search::Query.new
+      Chef::Log.info("search started (project: '#{project}')")
+      results = q.search("node",pattern)[0]
+      Chef::Log.info("search finshed (project: '#{project}', count: #{results.length})")
       
-      begin
-      if node_is_valid? node
-        response << build_node(node, username, hostname, custom_attributes)
-      else
-        Chef::Log.warn("invalid node element: #{node.inspect}")
+      response = File.open("#{Dir.tmpdir}/chef-rundeck-#{project}.xml", 'w')
+      response.write '<?xml version="1.0" encoding="UTF-8"?>'
+      response.write '<!DOCTYPE project PUBLIC "-//DTO Labs Inc.//DTD Resources Document 1.0//EN" "project.dtd">'
+      response.write '<project>'
+
+      Chef::Log.info("building nodes (project: '#{project}')")
+      failed = 0
+      results.each do |node|
+        begin
+          if node_is_valid? node
+            response.write build_node(node, username, hostname, custom_attributes)
+          else
+            Chef::Log.warn("invalid node element: #{node.inspect}")
+            failed = failed +1
+          end
+        rescue Exception => e
+          Chef::Log.error("=== could not generate xml for Node: #{node} - #{e.message}")
+          Chef::Log.debug(e.backtrace.join('\n'))
+        end
       end
-      rescue Exception => e
-        Chef::Log.error("=== could not generate xml for Node: #{node.name} - #{e.message}")
-        Chef::Log.debug(e.backtrace.join('\n'))
-      end
+      Chef::Log.info("nodes complete (project: '#{project}', total: #{results.length - failed}, failed: #{failed})")
+      
+      response.write "</project>"
+      Chef::Log.debug(response)
+    ensure
+      response.close unless response == nil
     end
-    
-    response << "</project>"
-    Chef::Log.debug(response)
-    
-    return response
+    return response.path
   end
 end
 
