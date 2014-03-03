@@ -83,18 +83,25 @@ class ChefRundeck < Sinatra::Base
     response =  '<?xml version="1.0" encoding="UTF-8"?>'
     response << '<!DOCTYPE project PUBLIC "-//DTO Labs Inc.//DTD Resources Document 1.0//EN" "project.dtd">'
     response << '<project>'
+    keys = {  'name' => [ 'name' ],
+              'kernel_machine' => [ 'kernel', 'machine' ],
+              'kernel_os' => [ 'kernel', 'os' ],
+              'fqdn' => [ 'fqdn' ],
+              'platform' => [ 'platform'],
+              'platform_version' => [ 'platform_version' ],
+              'run_list' => [ 'run_list' ],
+              'chef_environment' => [ 'chef_environment'],
+              'hostname' => [ 'hostname' ]
+            }
+    if !custom_attributes.nil? then
+      custom_attributes.each do |attr|
+      attr_name = attr
+      attr_value = get_custom_attr(node, attr.split('_'))
+      keys['#{attr_name}'] = [ '#{attr_value}' ]
+      end
+    end
 
-    Chef::PartialSearch.new.search(:node, pattern,
-      :keys => { 'name' => [ 'name' ],
-                 'kernel_machine' => [ 'kernel', 'machine' ],
-                 'kernel_os' => [ 'kernel', 'os' ],
-                 'fqdn' => [ 'fqdn' ],
-                 'platform' => [ 'platform'],
-                 'platform_version' => [ 'platform_version' ],
-                 'run_list' => [ 'run_list' ],
-                 'chef_environment' => [ 'chef_environment'],
-                 'hostname' => [ 'hostname' ]
-               }) do |node|
+    Chef::PartialSearch.new.search( :node, pattern, :keys ) do |node|
       
       begin
       if node_is_valid? node
