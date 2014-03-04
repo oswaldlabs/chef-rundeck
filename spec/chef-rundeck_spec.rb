@@ -8,6 +8,8 @@ describe 'ChefRundeck' do
     ChefRundeck.username = ENV['USER']
     ChefRundeck.web_ui_url = 'https://manage.opscode.com'
     ChefRundeck.project_config = "#{ENV['TRAVIS_BUILD_DIR']}/spec/support/chef-rundeck.json"
+    ChefRundeck.cache_timeout = 0
+    ChefRundeck.environment = :development
     ChefRundeck.configure
   end
   it 'fetch to root should return 200' do
@@ -33,5 +35,14 @@ describe 'ChefRundeck' do
   it 'check custom attributes on node2 only' do
     get '/node2_systems'
     Nokogiri::XML(last_response.body).xpath("//project/node[@name='node2.chefrundeck.local']/attribute").length().should == 2
+    Nokogiri::XML(last_response.body).xpath("//project/node[@name='node2.chefrundeck.local']/attribute")[0].text.should == "linux"
+    Nokogiri::XML(last_response.body).xpath("//project/node[@name='node2.chefrundeck.local']/attribute")[1].text.should == "centos"
+  end
+  it 'check partial search' do
+    ChefRundeck.partial_search = true
+    get '/node2_systems'
+    Nokogiri::XML(last_response.body).xpath("//project/node[@name='node2.chefrundeck.local']/attribute").length().should == 2
+    Nokogiri::XML(last_response.body).xpath("//project/node[@name='node2.chefrundeck.local']/attribute")[0].text.should == "linux"
+    Nokogiri::XML(last_response.body).xpath("//project/node[@name='node2.chefrundeck.local']/attribute")[1].text.should == "centos"
   end
 end

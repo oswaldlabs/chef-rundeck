@@ -103,7 +103,7 @@ ChefRundeck.web_ui_url = cli.config[:web_ui_url]
 ChefRundeck.api_url = cli.config[:api_url]
 ChefRundeck.client_key = cli.config[:client_key]
 ChefRundeck.project_config = cli.config[:project_config]
-ChefRundeck.environment = cli.config[:env]
+ChefRundeck.environment = cli.config[:env].to_sym
 ChefRundeck.cache_timeout = cli.config[:cache_timeout].to_i
 ChefRundeck.partial_search = cli.config[:partial_search] == "true"
 ChefRundeck.configure

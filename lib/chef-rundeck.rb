@@ -70,6 +70,8 @@ class ChefRundeck < Sinatra::Base
             Chef::Log.info("Loading nodes for /#{project}")
             send_file build_project project, projects[project]['pattern'], projects[project]['username'], (projects[project]['hostname'].nil? ? "fqdn" : projects[project]['hostname']), projects[project]['attributes']
           end
+          cache_file = "#{Dir.tmpdir}/chef-rundeck-#{project}.xml"
+          at_exit { File.delete(cache_file) if File.exist?(cache_file) }
         end
       end
       
@@ -78,6 +80,9 @@ class ChefRundeck < Sinatra::Base
         Chef::Log.info("Loading all nodes for /")
         send_file build_project
       end
+      
+      cache_file = "#{Dir.tmpdir}/chef-rundeck-default.xml"
+      at_exit { File.delete(cache_file) if File.exist?(cache_file) }
     end
   end
 
@@ -121,6 +126,7 @@ class ChefRundeck < Sinatra::Base
         Chef::Log.info("search started (project: '#{project}')")
         results = q.search("node",pattern)[0]
         Chef::Log.info("search finshed (project: '#{project}', count: #{results.length})")
+        results = convert_results(results, custom_attributes)
       end
       
       response = File.open("#{Dir.tmpdir}/chef-rundeck-#{project}.xml", 'w')
@@ -184,14 +190,14 @@ def build_node (node, username, hostname, custom_attributes)
 EOH
      if !custom_attributes.nil? then
        custom_attributes.each do |attr|
-        attr_name = attr
-        attr_value = get_custom_attr(node, attr.split('.'))
-        data << <<-EOH
+         attr_name = attr
+         attr_value = node[attr.gsub('.','_')]
+         data << <<-EOH
       <attribute name="#{attr_name}"><![CDATA[#{attr_value}]]></attribute>
 EOH
-        end
-        data << "</node>"
-      end
+       end
+       data << "</node>"
+     end
 
   return data
 end
@@ -208,6 +214,34 @@ def get_custom_attr (obj, params)
   return value.nil? ? "" : value.to_s
 end
 
+# Convert results to be compatiable with Chef 11 format
+def convert_results(results, custom_attributes)
+ new_results = []
+ results.each do |node|
+   n = {}
+   n['name'] = node.name
+   n['chef_environment'] = node.chef_environment
+   n['run_list'] = node.run_list
+   n['recipes'] = !node.run_list.nil? ? node.run_list.recipes : nil
+   n['roles'] = !node.run_list.nil? ? node.run_list.roles : nil
+   n['fqdn'] = node['fqdn']
+   n['hostname'] = node['hostname']
+   n['kernel_machine'] = !node['kernel'].nil? ? node['kernel']['machine'] : nil
+   n['kernel_os'] = !node['kernel'].nil? ? node['kernel']['os'] : nil
+   n['platform'] = node['platform']
+   n['platform_version'] = node['platform_version']
+   
+   if !custom_attributes.nil? then
+     custom_attributes.each do |attr|
+       ps_name = attr.gsub('.','_')
+       n[ps_name] = get_custom_attr(node, attr.split('.'))
+     end
+   end
+   new_results << n
+ end 
+ return new_results
+end
+
 
 # Helper def to validate the node 
 def node_is_valid?(node)
@@ -217,6 +251,7 @@ def node_is_valid?(node)
   raise ArgumentError, "#{node} missing 'recipes'" if !node['recipes']
   raise ArgumentError, "#{node} missing 'roles'" if !node['roles']
   raise ArgumentError, "#{node} missing 'fqdn'" if !node['fqdn']
+  raise ArgumentError, "#{node} missing 'hostname'" if !node['hostname']
   raise ArgumentError, "#{node} missing 'kernel.machine'" if !node['kernel_machine']
   raise ArgumentError, "#{node} missing 'kernel.os'" if !node['kernel_os']
   raise ArgumentError, "#{node} missing 'platform'" if !node['platform']
@@ -278,12 +313,12 @@ def partial_search(type, query='*:*', *args, &block)
   end
   # If you pass a block, or have the start or rows arguments, do raw result parsing
   if Kernel.block_given? || args_hash[:start] || args_hash[:rows]
-    ChefRundeck::PartialSearch.new.search(type, query, args_hash, &block)
+    PartialSearch.new.search(type, query, args_hash, &block)
  
   # Otherwise, do the iteration for the end user
   else
     results = Array.new
-    ChefRundeck::PartialSearch.new.search(type, query, args_hash) do |o|
+    PartialSearch.new.search(type, query, args_hash) do |o|
         results << o
     end
      results
