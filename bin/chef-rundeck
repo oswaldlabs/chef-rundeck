@@ -105,7 +105,7 @@ ChefRundeck.client_key = cli.config[:client_key]
 ChefRundeck.project_config = cli.config[:project_config]
 ChefRundeck.environment = cli.config[:env]
 ChefRundeck.cache_timeout = cli.config[:cache_timeout].to_i
-ChefRundeck.partial_search = cli.config[:partial_search].to_bool
+ChefRundeck.partial_search = cli.config[:partial_search] == "true"
 ChefRundeck.configure
 
 begin

@@ -14,7 +14,6 @@
 # limitations under the License.
 #
 
-require 'sinatra'
 require 'sinatra/base'
 require 'chef'
 require 'chef/node'
@@ -24,6 +23,7 @@ require 'chef/role'
 require 'chef/environment'
 require 'chef/data_bag'
 require 'chef/data_bag_item'
+require 'partial_search'
 
 REQUIRED_ATTRS = [ :kernel, :fqdn, :platform, :platform_version ]
 
@@ -92,18 +92,30 @@ class ChefRundeck < Sinatra::Base
 
       results = []
       if ChefRundeck.partial_search then
-        Chef::Log.info("search started (project: '#{project}')")
-        results = Chef::PartialSearch.new.search(:node, pattern,
-          :keys => { 'name' => [ 'name' ],
-                   'kernel_machine' => [ 'kernel', 'machine' ],
-                   'kernel_os' => [ 'kernel', 'os' ],
-                   'fqdn' => [ 'fqdn' ],
-                   'platform' => [ 'platform'],
-                   'platform_version' => [ 'platform_version' ],
-                   'run_list' => [ 'run_list' ],
-                   'chef_environment' => [ 'chef_environment'],
-                   'hostname' => [ 'hostname' ]
-                 })  
+        keys = { 'name' => ['name'],
+                 'kernel_machine' => [ 'kernel', 'machine' ],
+                 'kernel_os' => [ 'kernel', 'os' ],
+                 'fqdn' => [ 'fqdn' ],
+                 'run_list' => [ 'run_list' ],
+                 'roles' => [ 'roles' ],
+                 'recipes' => [ 'recipes' ],
+                 'chef_environment' => [ 'chef_environment' ],
+                 'platform' => [ 'platform'],
+                 'platform_version' => [ 'platform_version' ],
+                 'hostname' => [ 'hostname' ]
+               }  
+        if !custom_attributes.nil? then
+          custom_attributes.each do |attr|
+          attr_name = attr.gsub('.', '_')
+          attr_value = attr.split('.')
+          keys[attr_name] = attr_value
+          end
+        end
+        
+        # do search
+        Chef::Log.info("partial search started (project: '#{project}')")
+        results = partial_search(:node,pattern, :keys => keys)
+        Chef::Log.info("partial search finshed (project: '#{project}', count: #{results.length})")
       else 
         q = Chef::Search::Query.new
         Chef::Log.info("search started (project: '#{project}')")
@@ -120,14 +132,19 @@ class ChefRundeck < Sinatra::Base
       failed = 0
       results.each do |node|
         begin
-          if node_is_valid? node
-            response.write build_node(node, username, hostname, custom_attributes)
-          else
-            Chef::Log.warn("invalid node element: #{node.inspect}")
+          # validate the node
+          begin
+            node_is_valid? node
+          rescue ArgumentError => ae
+            Chef::Log.warn("invalid node element: #{ae}")
             failed = failed +1
+            next
           end
+          
+          #write the node to the project
+          response.write build_node(node, username, hostname, custom_attributes)
         rescue Exception => e
-          Chef::Log.error("=== could not generate xml for Node: #{node} - #{e.message}")
+          Chef::Log.error("=== could not generate xml for #{node}:  #{e.message}")
           Chef::Log.debug(e.backtrace.join('\n'))
         end
       end
@@ -157,9 +174,9 @@ def build_node (node, username, hostname, custom_attributes)
       osFamily="#{xml_escape(os_family)}"
       osName="#{xml_escape(node['platform'])}"
       osVersion="#{xml_escape(node['platform_version'])}"
-      tags="#{xml_escape(node['run_list']['roles'].concat(node['run_list']['recipes']).join(',') + ',' + node['chef_environment'])}"
-      roles="#{xml_escape(node['run_list']['roles'].join(','))}"
-      recipes="#{xml_escape(node['run_list']['recipes'].join(','))}"
+      roles="#{xml_escape(node['roles'].join(','))}"
+      recipes="#{xml_escape(node['recipes'].join(','))}"
+      tags="#{xml_escape(node['roles'].concat(node['recipes']).join(',') + ',' + node['chef_environment'])}"
       environment="#{xml_escape(node['chef_environment'])}"
       username="#{xml_escape(username)}"
       hostname="#{xml_escape(node['hostname'])}"
@@ -181,7 +198,7 @@ end
 
 def get_custom_attr (obj, params)
   value = obj
-  Chef::Log.debug("loading custom attributes for node: #{obj} with #{params}")
+  Chef::Log.debug("loading custom attributes for node: #{obj['name']} with #{params}")
   params.each do |p|   
     value = value[p.to_sym]
     if value.nil? then
@@ -191,13 +208,84 @@ def get_custom_attr (obj, params)
   return value.nil? ? "" : value.to_s
 end
 
+
+# Helper def to validate the node 
 def node_is_valid?(node)
-  node['fqdn'] and
-  node['name'] and
-  node['kernel'] and
-  node['kernel_machine'] and
-  node['kernel_os'] and
-  node['platform'] and
-  node['platform_version'] and
-  node['chef_environment']
+  raise ArgumentError, "#{node} missing 'name'" if !node['name']
+  raise ArgumentError, "#{node} missing 'chef_environment'" if !node['chef_environment']
+  raise ArgumentError, "#{node} missing 'run_list'" if !node['run_list']
+  raise ArgumentError, "#{node} missing 'recipes'" if !node['recipes']
+  raise ArgumentError, "#{node} missing 'roles'" if !node['roles']
+  raise ArgumentError, "#{node} missing 'fqdn'" if !node['fqdn']
+  raise ArgumentError, "#{node} missing 'kernel.machine'" if !node['kernel_machine']
+  raise ArgumentError, "#{node} missing 'kernel.os'" if !node['kernel_os']
+  raise ArgumentError, "#{node} missing 'platform'" if !node['platform']
+  raise ArgumentError, "#{node} missing 'platform_version'" if !node['platform_version']
+end
+
+
+# partial_search(type, query, options, &block)
+#
+# Searches for nodes, roles, etc. and returns the results.  This method may
+# perform more than one search request, if there are a large number of results.
+#
+# ==== Parameters
+# * +type+: index type (:role, :node, :client, :environment, data bag name)
+# * +query+: SOLR query.  "*:*", "role:blah", "not role:blah", etc.  Defaults to '*:*'
+# * +options+: hash with options:
+# ** +:start+: First row to return (:start => 50, :rows => 100 means "return the
+#               50th through 150th result")
+# ** +:rows+: Number of rows to return.  Defaults to 1000.
+# ** +:sort+: a SOLR sort specification.  Defaults to 'X_CHEF_id_CHEF_X asc'.
+# ** +:keys+: partial search keys.  If this is not specified, the search will
+#             not be partial.
+#
+# ==== Returns
+#
+# This method returns an array of search results.  Partial search results will
+# be JSON hashes with the structure specified in the +keys+ option.  Other
+# results include +Chef::Node+, +Chef::Role+, +Chef::Client+, +Chef::Environment+,
+# +Chef::DataBag+ and +Chef::DataBagItem+ objects, depending on the search type.
+#
+# If a block is specified, the block will be called with each result instead of
+# returning an array.  This method will not block if it returns
+#
+# If start or row is specified, and no block is given, the result will be a
+# triple containing the list, the start and total:
+#
+#     [ [ row1, row2, ... ], start, total ]
+#
+# ==== Example
+#
+#     partial_search(:node, 'role:webserver',
+#                    keys: {
+#                      name: [ 'name' ],
+#                      ip: [ 'amazon', 'ip', 'public' ]
+#                    }
+#     ).each do |node|
+#       puts "#{node[:name]}: #{node[:ip]}"
+#     end
+#
+def partial_search(type, query='*:*', *args, &block)
+  # Support both the old (positional args) and new (hash args) styles of calling
+  if args.length == 1 && args[0].is_a?(Hash)
+    args_hash = args[0]
+  else
+    args_hash = {}
+    args_hash[:sort] = args[0] if args.length >= 1
+    args_hash[:start] = args[1] if args.length >= 2
+    args_hash[:rows] = args[2] if args.length >= 3
+  end
+  # If you pass a block, or have the start or rows arguments, do raw result parsing
+  if Kernel.block_given? || args_hash[:start] || args_hash[:rows]
+    ChefRundeck::PartialSearch.new.search(type, query, args_hash, &block)
+ 
+  # Otherwise, do the iteration for the end user
+  else
+    results = Array.new
+    ChefRundeck::PartialSearch.new.search(type, query, args_hash) do |o|
+        results << o
+    end
+     results
+  end
 end
