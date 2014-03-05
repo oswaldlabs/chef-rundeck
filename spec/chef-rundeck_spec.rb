@@ -26,6 +26,16 @@ describe 'ChefRundeck' do
     Nokogiri::XML(last_response.body).xpath("//project/node[@name='node1.chefrundeck.local']").length().should == 1
     Nokogiri::XML(last_response.body).xpath("//project/node[@name='node2.chefrundeck.local']").length().should == 0
   end
+  it 'fetched document should be node1 only verify hostname override' do
+    get '/node1_systems'
+    last_response.should be_ok
+    Nokogiri::XML(last_response.body).xpath("//project/node[@name='node1.chefrundeck.local']/@hostname").text().should == "10.0.0.1"
+  end
+  it 'fetched document should be node2 only verify hostname' do
+    get '/node2_systems'
+    last_response.should be_ok
+    Nokogiri::XML(last_response.body).xpath("//project/node[@name='node2.chefrundeck.local']/@hostname").text().should == "node2.chefrundeck.local"
+  end
   it 'fetched document should be node2 only' do
     get '/node2_systems'
     last_response.should be_ok
@@ -44,5 +54,17 @@ describe 'ChefRundeck' do
     Nokogiri::XML(last_response.body).xpath("//project/node[@name='node2.chefrundeck.local']/attribute").length().should == 2
     Nokogiri::XML(last_response.body).xpath("//project/node[@name='node2.chefrundeck.local']/attribute")[0].text.should == "linux"
     Nokogiri::XML(last_response.body).xpath("//project/node[@name='node2.chefrundeck.local']/attribute")[1].text.should == "centos"
+  end
+  it 'partial search: fetched document should be node1 only verify hostname override' do
+    ChefRundeck.partial_search = true
+    get '/node1_systems'
+    last_response.should be_ok
+    Nokogiri::XML(last_response.body).xpath("//project/node[@name='node1.chefrundeck.local']/@hostname").text().should == "10.0.0.1"
+  end
+  it 'partial search: fetched document should be node2 only verify hostname' do
+    ChefRundeck.partial_search = true
+    get '/node2_systems'
+    last_response.should be_ok
+    Nokogiri::XML(last_response.body).xpath("//project/node[@name='node2.chefrundeck.local']/@hostname").text().should == "node2.chefrundeck.local"
   end
 end

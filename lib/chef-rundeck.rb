@@ -107,7 +107,7 @@ class ChefRundeck < Sinatra::Base
                  'chef_environment' => [ 'chef_environment' ],
                  'platform' => [ 'platform'],
                  'platform_version' => [ 'platform_version' ],
-                 'hostname' => [ 'hostname' ]
+                 'hostname' => [hostname]
                }  
         if !custom_attributes.nil? then
           custom_attributes.each do |attr|
@@ -116,7 +116,6 @@ class ChefRundeck < Sinatra::Base
           keys[attr_name] = attr_value
           end
         end
-        
         # do search
         Chef::Log.info("partial search started (project: '#{project}')")
         results = partial_search(:node,pattern, :keys => keys)
@@ -126,7 +125,7 @@ class ChefRundeck < Sinatra::Base
         Chef::Log.info("search started (project: '#{project}')")
         results = q.search("node",pattern)[0]
         Chef::Log.info("search finshed (project: '#{project}', count: #{results.length})")
-        results = convert_results(results, custom_attributes)
+        results = convert_results(results, hostname, custom_attributes)
       end
       
       response = File.open("#{Dir.tmpdir}/chef-rundeck-#{project}.xml", 'w')
@@ -215,7 +214,7 @@ def get_custom_attr (obj, params)
 end
 
 # Convert results to be compatiable with Chef 11 format
-def convert_results(results, custom_attributes)
+def convert_results(results, hostname, custom_attributes)
  new_results = []
  results.each do |node|
    n = {}
@@ -225,7 +224,7 @@ def convert_results(results, custom_attributes)
    n['recipes'] = !node.run_list.nil? ? node.run_list.recipes : nil
    n['roles'] = !node.run_list.nil? ? node.run_list.roles : nil
    n['fqdn'] = node['fqdn']
-   n['hostname'] = node['hostname']
+   n['hostname'] = node[hostname.to_sym]
    n['kernel_machine'] = !node['kernel'].nil? ? node['kernel']['machine'] : nil
    n['kernel_os'] = !node['kernel'].nil? ? node['kernel']['os'] : nil
    n['platform'] = node['platform']
