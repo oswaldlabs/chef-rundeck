@@ -1,3 +1,13 @@
+ # Changelog 2.1.0
+ ## Release Summary
+ # As some of the others have mentioned partial search is the way to go. We have seen 80%-90% improvement in performance. In addition we have introduced caching via a tmp file, this allows large chef node data not to remain in memory and slow down responses. Sinatra also will now run in env 'production' by default.
+
+# New CLI params:
+
+* --env (production/development) (default: production)
+* --partial-search (true/false) - Only supported when using Chef Server 11 (default: false)
+* --timeout (cache timeout in seconds) (default: 30)
+
  # Changelog - 2.0.0
  ## Release Summary
   * Added support for search defined project resource definitions
