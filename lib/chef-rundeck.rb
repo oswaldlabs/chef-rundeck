@@ -107,6 +107,7 @@ class ChefRundeck < Sinatra::Base
                  'chef_environment' => [ 'chef_environment' ],
                  'platform' => [ 'platform'],
                  'platform_version' => [ 'platform_version' ],
+                 'tags' => ['tags'],
                  'hostname' => [hostname]
                }  
         if !custom_attributes.nil? then
@@ -181,7 +182,7 @@ def build_node (node, username, hostname, custom_attributes)
       osVersion="#{xml_escape(node['platform_version'])}"
       roles="#{xml_escape(node['roles'].join(','))}"
       recipes="#{xml_escape(node['recipes'].join(','))}"
-      tags="#{xml_escape(node['roles'].concat(node['recipes']).join(',') + ',' + node['chef_environment'])}"
+      tags="#{xml_escape(node['tags'].join(','))}"
       environment="#{xml_escape(node['chef_environment'])}"
       username="#{xml_escape(username)}"
       hostname="#{xml_escape(node['hostname'])}"
@@ -224,6 +225,7 @@ def convert_results(results, hostname, custom_attributes)
    n['recipes'] = !node.run_list.nil? ? node.run_list.recipes : nil
    n['roles'] = !node.run_list.nil? ? node.run_list.roles : nil
    n['fqdn'] = node['fqdn']
+   n['tags'] = node['tags']
    n['hostname'] = node[hostname.to_sym]
    n['kernel_machine'] = !node['kernel'].nil? ? node['kernel']['machine'] : nil
    n['kernel_os'] = !node['kernel'].nil? ? node['kernel']['os'] : nil
