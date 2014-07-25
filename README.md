@@ -8,11 +8,11 @@ A simple Sinatra app that presents matching node results of a Chef search format
 
 ## Usage
 
-Install the gem and fire up chef-rundeck.  Point it at a Chef client config file (a knife config would be ideal) and provide the URI for your Chef server's web UI.
+Install the gem and fire up chef-rundeck.  Point it at a Chef client config file (a knife config would be ideal) using the `-c` flag and provide the URI for your Chef server's web UI.
 
 ## Configuration Notes
 
-More to come.
+More to come. The [wiki] (https://github.com/oswaldlabs/chef-rundeck/wiki/) is a good starting place.
 
 ## Notes on Patches/Pull Requests
 
