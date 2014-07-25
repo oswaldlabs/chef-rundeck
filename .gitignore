@@ -20,6 +20,7 @@ pkg
 
 ## PROJECT::SPECIFIC
 *.gem
+gemfiles/*.lock
 
 ## RubyMine project files
 .idea
