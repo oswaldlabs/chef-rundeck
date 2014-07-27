@@ -107,6 +107,7 @@ class ChefRundeck < Sinatra::Base
                  'chef_environment' => [ 'chef_environment' ],
                  'platform' => [ 'platform'],
                  'platform_version' => [ 'platform_version' ],
+                 'tags' => [ 'tags' ],
                  'hostname' => [hostname]
                }  
         if !custom_attributes.nil? then
@@ -142,7 +143,7 @@ class ChefRundeck < Sinatra::Base
             node_is_valid? node
           rescue ArgumentError => ae
             Chef::Log.warn("invalid node element: #{ae}")
-            failed = failed +1
+            failed = failed + 1
             next
           end
           
@@ -181,7 +182,7 @@ def build_node (node, username, hostname, custom_attributes)
       osVersion="#{xml_escape(node['platform_version'])}"
       roles="#{xml_escape(node['roles'].join(','))}"
       recipes="#{xml_escape(node['recipes'].join(','))}"
-      tags="#{xml_escape(node['roles'].concat(node['recipes']).join(',') + ',' + node['chef_environment'])}"
+      tags="#{xml_escape([ node['roles'], node['recipes'], node['chef_environment'], node['tags']].flatten.join(","))}"
       environment="#{xml_escape(node['chef_environment'])}"
       username="#{xml_escape(username)}"
       hostname="#{xml_escape(node['hostname'])}"
@@ -229,6 +230,7 @@ def convert_results(results, hostname, custom_attributes)
    n['kernel_os'] = !node['kernel'].nil? ? node['kernel']['os'] : nil
    n['platform'] = node['platform']
    n['platform_version'] = node['platform_version']
+   n['tags'] = node['tags']
    
    if !custom_attributes.nil? then
      custom_attributes.each do |attr|
