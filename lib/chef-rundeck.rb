@@ -68,7 +68,8 @@ class ChefRundeck < Sinatra::Base
           get "/#{project}" do
             content_type 'text/xml'
             Chef::Log.info("Loading nodes for /#{project}")
-            send_file build_project project, projects[project]['pattern'], projects[project]['username'], (projects[project]['hostname'].nil? ? "fqdn" : projects[project]['hostname']), projects[project]['attributes']
+            # TODO: Validate project data before rendering the document?
+            send_file build_project project, projects[project]['pattern'], (projects[project]['username'].nil? ? ChefRundeck.username : projects[project]['username']), (projects[project]['hostname'].nil? ? "fqdn" : projects[project]['hostname']), projects[project]['attributes']
           end
           cache_file = "#{Dir.tmpdir}/chef-rundeck-#{project}.xml"
           at_exit { File.delete(cache_file) if File.exist?(cache_file) }
