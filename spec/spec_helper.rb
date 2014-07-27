@@ -3,7 +3,6 @@ $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 require 'chef-rundeck'
 require 'sinatra'
 require 'rspec'
-require 'rspec/autorun'
 require 'rack/test'
 
 
