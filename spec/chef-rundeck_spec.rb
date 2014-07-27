@@ -28,6 +28,21 @@ describe 'ChefRundeck' do
     expect(Nokogiri::XML(last_response.body).xpath("//project/node[@name='node1.chefrundeck.local']/@tags").text()).to include("tag1")
     expect(Nokogiri::XML(last_response.body).xpath("//project/node[@name='node1.chefrundeck.local']/@tags").text()).to include("development")
   end
+  it 'data for node1 should contain custom role attribute with Chef node object\'s role' do
+    get '/'
+    expect(last_response).to be_ok
+    expect(Nokogiri::XML(last_response.body).xpath("//project/node[@name='node1.chefrundeck.local']/@roles").text()).to include("role1")
+  end
+  it 'data for node1 should contain custom recipes attribute with Chef node object\'s run list' do
+    get '/'
+    expect(last_response).to be_ok
+    expect(Nokogiri::XML(last_response.body).xpath("//project/node[@name='node1.chefrundeck.local']/@recipes").text()).to include("cookbook::default")
+  end
+  it 'data for node1 should contain custom environment attribute with Chef node object\'s environment' do
+    get '/'
+    expect(last_response).to be_ok
+    expect(Nokogiri::XML(last_response.body).xpath("//project/node[@name='node1.chefrundeck.local']/@environment").text()).to eq("development")
+  end
   it 'fetched document for first test project should be node1 only' do
     get '/node1_systems'
     expect(last_response).to be_ok
