@@ -43,6 +43,11 @@ describe 'ChefRundeck' do
     expect(last_response).to be_ok
     expect(Nokogiri::XML(last_response.body).xpath("//project/node[@name='node1.chefrundeck.local']/@environment").text()).to eq("development")
   end
+  it 'data for node1 should contain default ChefRundeck username' do
+    get '/'
+    expect(last_response).to be_ok
+    expect(Nokogiri::XML(last_response.body).xpath("//project/node[@name='node1.chefrundeck.local']/@username").text()).to eq(ChefRundeck.username)
+  end
   it 'fetched document for first test project should be node1 only' do
     get '/node1_systems'
     expect(last_response).to be_ok
@@ -53,6 +58,11 @@ describe 'ChefRundeck' do
     get '/node1_systems'
     expect(last_response).to be_ok
     expect(Nokogiri::XML(last_response.body).xpath("//project/node[@name='node1.chefrundeck.local']/@hostname").text()).to eq("10.0.0.1")
+  end
+  it 'fetched document node data should contain custom username' do
+    get '/node1_systems'
+    expect(last_response).to be_ok
+    expect(Nokogiri::XML(last_response.body).xpath("//project/node[@name='node1.chefrundeck.local']/@username").text()).to eq("rundeck")
   end
   it 'fetched document should be node2 only verify hostname' do
     get '/node2_systems'
@@ -70,6 +80,11 @@ describe 'ChefRundeck' do
     expect(Nokogiri::XML(last_response.body).xpath("//project/node[@name='node2.chefrundeck.local']/attribute").length()).to eq(2)
     expect(Nokogiri::XML(last_response.body).xpath("//project/node[@name='node2.chefrundeck.local']/attribute")[0].text).to eq("linux")
     expect(Nokogiri::XML(last_response.body).xpath("//project/node[@name='node2.chefrundeck.local']/attribute")[1].text).to eq("centos")
+  end
+  it 'fetched document node data should use application default' do
+    get '/node2_systems'
+    expect(last_response).to be_ok
+    expect(Nokogiri::XML(last_response.body).xpath("//project/node[@name='node2.chefrundeck.local']/@username").text()).to eq(ChefRundeck.username)
   end
   context 'when partial search is enabled' do
     before do

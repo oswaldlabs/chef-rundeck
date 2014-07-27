@@ -6,7 +6,6 @@
   },
   "node2_systems": {
     "pattern": "fqdn:node2*",
-    "username": "rundeck_user",
     "hostname": "fqdn",
     "attributes": ["os", "platform"]    
   }
