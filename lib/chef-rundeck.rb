@@ -224,7 +224,7 @@ def convert_results(results, hostname, custom_attributes)
    n['chef_environment'] = node.chef_environment
    n['run_list'] = node.run_list
    n['recipes'] = !node.run_list.nil? ? node.run_list.recipes : nil
-   n['roles'] = !node.run_list.nil? ? node.run_list.roles : nil
+   n['roles'] = !node.run_list.nil? ? node.roles : nil
    n['fqdn'] = node['fqdn']
    n['hostname'] = get_custom_attr(node, hostname.split('.'))
    n['kernel_machine'] = !node['kernel'].nil? ? node['kernel']['machine'] : nil
