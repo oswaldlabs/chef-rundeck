@@ -25,7 +25,11 @@ If your organization has many nodes and you notice slow performance from chef-ru
 chef-rundeck caches the generated resource XML for a project by default for 30 seconds.  If this behavior ruins your day, change the number
 of seconds a document is cached by using the `-t` switch.
 
+
 Further configuration details can be found on the [wiki] (https://github.com/oswaldlabs/chef-rundeck/wiki/).
+
+## Rundeck Configuration
+Ensure each project has the URL Source under Resource Model Source. By default, the sinatra app is on localhost, port 9980 (http://localhost:9980).
 
 ## Notes on Patches/Pull Requests
 
