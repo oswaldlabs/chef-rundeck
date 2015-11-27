@@ -226,7 +226,7 @@ def convert_results(results, hostname, custom_attributes)
    n['recipes'] = !node.run_list.nil? ? node.run_list.recipes : nil
    n['roles'] = !node.run_list.nil? ? node.run_list.roles : nil
    n['fqdn'] = node['fqdn']
-   n['hostname'] = node[hostname.to_sym]
+   n['hostname'] = get_custom_attr(node, hostname.split('.'))
    n['kernel_machine'] = !node['kernel'].nil? ? node['kernel']['machine'] : nil
    n['kernel_os'] = !node['kernel'].nil? ? node['kernel']['os'] : nil
    n['platform'] = node['platform']
