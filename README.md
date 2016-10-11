@@ -11,6 +11,9 @@ A simple Sinatra app that presents matching node results of a Chef search format
 Install the gem and fire up chef-rundeck.  Point it at a Chef client config file (a knife config would be ideal) using 
 the `-c` flag and provide the URI for your Chef server's web UI.
 
+To use with docker make your config files and mount the volume like this:
+`docker run -d -e 'USER=${job.username}' -v ~/.chef/chef-rundeck:/opt/knife -p 9980:9980 ehlers320/chef-rundeck:latest`
+
 ## Configuration Notes
 
 chef-rundeck binds to "localhost," which may result in it binding to an IPv6-only address in certain configurations.
