@@ -1,7 +1,7 @@
 #
-# Author:: Adam Jacob (<adam@opscode.com>)
-# Author:: John Keiser (<jkeiser@opscode.com>)
-# Copyright:: Copyright (c) 2012 Opscode, Inc.
+# Author:: Adam Jacob (<adam@chef.io>)
+# Author:: John Keiser (<jkeiser@chef.io>)
+# Copyright:: Copyright (c) 2012 Chef Software, Inc.
 # License:: Apache License, Version 2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,54 +27,56 @@ require 'chef/environment'
 require 'chef/data_bag'
 require 'chef/data_bag_item'
 
-class PartialSearch
+class Chef
+  class PartialSearch
+    attr_accessor :rest
 
-  attr_accessor :rest
-
-  def initialize(url=nil)
-    @rest = ::Chef::REST.new(url || ::Chef::Config[:chef_server_url])
-  end
-
-  # Search Solr for objects of a given type, for a given query. If you give
-  # it a block, it will handle the paging for you dynamically.
-  def search(type, query='*:*', args={}, &block)
-    raise ArgumentError, "Type must be a string or a symbol!" unless (type.kind_of?(String) || type.kind_of?(Symbol))
-
-    sort = args.include?(:sort) ? args[:sort] : 'X_CHEF_id_CHEF_X asc'
-    start = args.include?(:start) ? args[:start] : 0
-    rows = args.include?(:rows) ? args[:rows] : 1000
-    query_string = "search/#{type}?q=#{escape(query)}&sort=#{escape(sort)}&start=#{escape(start)}&rows=#{escape(rows)}"
-    if args[:keys]
-      response = @rest.post_rest(query_string, args[:keys])
-      response_rows = response['rows'].map { |row| row['data'] }
-    else
-      response = @rest.get_rest(query_string)
-      response_rows = response['rows']
+    def initialize(url = nil)
+      @rest = ::Chef::REST.new(url || ::Chef::Config[:chef_server_url])
     end
-    if block
-      response_rows.each { |o| block.call(o) unless o.nil?}
-      unless (response["start"] + response_rows.length) >= response["total"]
-        nstart = response["start"] + rows
-        args_hash = {
-          :keys => args[:keys],
-          :sort => sort,
-          :start => nstart,
-          :rows => rows
-        }
-        search(type, query, args_hash, &block)
+
+    # Search Solr for objects of a given type, for a given query. If you give
+    # it a block, it will handle the paging for you dynamically.
+    def search(type, query = '*:*', args = {}, &block)
+      fail ArgumentError, 'Type must be a string or a symbol!' unless type.is_a?(String) || type.is_a?(Symbol)
+
+      sort = args.include?(:sort) ? args[:sort] : 'X_CHEF_id_CHEF_X asc'
+      start = args.include?(:start) ? args[:start] : 0
+      rows = args.include?(:rows) ? args[:rows] : 1000
+      query_string = "search/#{type}?q=#{escape(query)}&sort=#{escape(sort)}&start=#{escape(start)}&rows=#{escape(rows)}"
+      if args[:keys]
+        response = @rest.post_rest(query_string, args[:keys])
+        response_rows = response['rows'].map { |row| row['data'] }
+      else
+        response = @rest.get_rest(query_string)
+        response_rows = response['rows']
       end
-      true
-    else
-      [ response_rows, response["start"], response["total"] ]
+      if block
+        response_rows.each { |o| block.call(o) unless o.nil? }
+        unless (response['start'] + response_rows.length) >= response['total']
+          nstart = response['start'] + rows
+          args_hash = {
+            keys: args[:keys],
+            sort: sort,
+            start: nstart,
+            rows: rows
+          }
+          search(type, query, args_hash, &block)
+        end
+        true
+      else
+        [response_rows, response['start'], response['total']]
+      end
     end
-  end
 
-  def list_indexes
-    response = @rest.get_rest("search")
-  end
+    def list_indexes
+      @rest.get_rest('search')
+    end
 
-  private
+    private
+
     def escape(s)
       s && URI.escape(s.to_s)
     end
+  end
 end
